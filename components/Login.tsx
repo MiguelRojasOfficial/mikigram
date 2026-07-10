@@ -1,4 +1,4 @@
-/*'use client'
+'use client'
 
 import { useAuth } from '@/hooks/useAuth';
 import { MessageSquare, ShieldCheck, Zap } from 'lucide-react';
@@ -50,7 +50,7 @@ export default function Login() {
         </div>
     );
 }
-*/
+ /*
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -379,4 +379,4 @@ export default function LoginPage() {
             </div>
         </div>
     );
-}
+} */
