@@ -68,6 +68,12 @@ export default function ChatWindow() {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  useEffect(() => {
+    setText('');
+    setEditingMessage(null);
+    setShowEmojiPicker(false);
+  }, [selectedChat]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
     if (!selectedChat || !user) return;
