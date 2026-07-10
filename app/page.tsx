@@ -6,7 +6,7 @@ import { useChatsList } from '@/hooks/useChatsList'
 import { useChatStore } from '@/store/useChatStore';
 import Login from '@/components/Login';
 import ChatWindow from '@/components/ChatWindow';
-import { Search, LogOut, MoreVertical, MessageCircle, Loader2 } from "lucide-react";
+import { Search, LogOut, MoreVertical, MessageCircle, Loader2, X } from "lucide-react";
 import { useGlobalNotifications } from '@/hooks/useGlobalNotifications';
 
 export default function Home() {
@@ -22,13 +22,16 @@ export default function Home() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    searchUser(searchEmail);
+    e.stopPropagation();
+    if (searchEmail.trim() !== '') {
+    searchUser(searchEmail.trim());
+    }
   };
 
   const handleClearSearch = () => {
     setSearchEmail('');
     searchUser('');
-  }
+  };
 
   return (
     <main className="flex h-screen w-full bg-[#f0f2f5] dark:bg-[#111b20] overflow-hidden">
@@ -54,17 +57,29 @@ export default function Home() {
 
         <form onSubmit={handleSearchSubmit} className="p-2 px-4">
           <div className="bg-gray-100 dark:bg-[#202c35] flex items-center px-3 py-1.5 rounded-lg">
-            <Search size={20} className="text-gray-500" />
+            <Search size={20} className="text-gray-500 flex-shrink-0" />
             <input
               value={searchEmail}
               onChange={(e) => {
                 setSearchEmail(e.target.value);
-                if (e.target.value === '') searchUser('');
+                if (e.target.value === '') {
+                  searchUser('');
+                } 
               }}
               placeholder="Buscar usuario por correo exacto ...."
               className="bg-transparent border-none outline-none px-3 w-full text-sm text-white-900 dark: text-gray-200"
             />
-            {searchLoading && <Loader2 size={16} className="animate-spin text-gray-500" />}
+            <div className="flex items-center gap-1.5 min-w-[20px] justify-end">
+              {searchLoading && <Loader2 size={16} className="animate-spin text-gray-500" />}
+              {searchEmail && !searchLoading && (
+                <button 
+                  type="button" 
+                  onClick={handleClearSearch} 
+                  className="text-gray-400 hover:text-gray-200">
+                    <X size={16} />
+                  </button>
+              )}
+            </div>
           </div>
         </form>
 
@@ -75,7 +90,7 @@ export default function Home() {
                 <p className="text-xs font-semibold text-blue-500">Resultados encontrados:</p>
                 <button type="button" onClick={handleClearSearch} className="text-[11px] text-gray-400 hover:underline">Volver</button>
               </div>
-              {searchResults.length > 0 ? (
+              {searchResults && searchResults.length > 0 ? (
                 searchResults.map((targetUser) => (
                   <div
                     key={targetUser.uid}
@@ -83,14 +98,14 @@ export default function Home() {
                     className="flex p-3 items-center gap-3 bg-white dark:bg-[#111b20] rounded-xl hover:bg-gray-100 dark:hover:bg-[#2a3942] cursor-pointer shadow-sm mb-1 border border-gray-100 dark:border-gray-800"     
                   >
                     <img src={targetUser.photoURL} alt="" className="h-10 w-10 rounded-full" />
-                    <div className="overflow-hidden">
+                    <div className="overflow-hidden flex-1">
                       <h4 className="text-sm font-medium dark:text-white truncate">{targetUser.displayName}</h4>
                       <p className="text-xs text-gray-500 truncate">{targetUser.email}</p>
                     </div>
                   </div>
                 ))
                 ) : (
-                  <p className="text-xs text-gray-400 text-center py-4">No se encontraron usuarios.</p>
+                  !searchLoading && <p className="text-xs text-gray-400 text-center py-4">No se encontraron usuarios.</p>
                 )}
               </div>
           ) : (
