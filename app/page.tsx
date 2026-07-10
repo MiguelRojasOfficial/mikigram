@@ -62,7 +62,7 @@ export default function Home() {
                 if (e.target.value === '') searchUser('');
               }}
               placeholder="Buscar usuario por correo exacto ...."
-              className="bg-transparent border-none outline-none px-3 w-full text-sm text-white-800 dark: text-gray-200"
+              className="bg-transparent border-none outline-none px-3 w-full text-sm text-white-900 dark: text-gray-200"
             />
             {searchLoading && <Loader2 size={16} className="animate-spin text-gray-500" />}
           </div>
