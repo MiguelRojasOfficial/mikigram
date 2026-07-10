@@ -392,7 +392,7 @@ export default function ChatWindow() {
         <VideoCallModal
           chatId={selectedChat}
           currentUserId={user?.uid || ''}
-          recipientId={activeRecipient?.uid || ''}
+          recipientId={(activeRecipient as any)?.uid || ''}
           recipientName={activeRecipient?.displayName || 'Ususario'}
           isIncoming={isIncomingCall}
           onClose={() => setShowVideoCall(false)}
