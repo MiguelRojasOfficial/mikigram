@@ -67,7 +67,7 @@ export default function Home() {
                 } 
               }}
               placeholder="Buscar usuario por correo exacto ...."
-              className="bg-transparent border-none outline-none px-3 w-full text-sm text-gray-800 dark: text-white-200"
+              className="bg-transparent border-none outline-none px-3 w-full text-sm text-gray-800 dark:text-white-200"
             />
             <div className="flex items-center gap-1.5 min-w-[20px] justify-end">
               {searchLoading && <Loader2 size={16} className="animate-spin text-gray-500" />}
