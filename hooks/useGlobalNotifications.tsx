@@ -59,7 +59,7 @@ export const useGlobalNotifications = () => {
                             if (typeof setSelectedChat === 'function') {
                                 setSelectedChat(msgChatId);
                             } else {
-                                console.warm("La acción setSelectedChat no está disponible en tu store.");
+                                console.warn("La acción setSelectedChat no está disponible en tu store.");
                             }
                         };
 
