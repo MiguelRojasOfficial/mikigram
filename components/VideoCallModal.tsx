@@ -151,7 +151,6 @@ export default function VideoCallModal({
 
         initCall();
 
-        // Al desmontar el componente, únicamente se limpian los sockets activos, no se fuerza colgar.
         return () => {
             if (unsubCallDoc) unsubCallDoc();
             if (unsubCandidates) unsubCandidates();
