@@ -39,8 +39,6 @@ export default function VideoCallModal({
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const callDocRef = doc(db, 'chats', chatId, 'call', 'current');
-    
-    // Bandera para evitar ejecuciones duplicadas de desconexión destructiva durante renders intermedios
     const isEndingRef = useRef(false);
 
     useEffect(() => {
@@ -50,19 +48,15 @@ export default function VideoCallModal({
 
         const initCall = async () => {
             try {
-                // 1. Obtener acceso de hardware
                 localMediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 setLocalStream(localMediaStream);
                 if (localVideoRef.current) localVideoRef.current.srcObject = localMediaStream;
 
-                // 2. Establecer el Peer de WebRTC
                 const pc = new RTCPeerConnection(iceServers);
                 peerConnection.current = pc;
                 
-                // Adjuntar streams locales
                 localMediaStream.getTracks().forEach((track) => pc.addTrack(track, localMediaStream!));
                 
-                // Capturar el stream del remoto
                 pc.ontrack = (event) => {
                     const [remote] = event.streams;
                     setRemoteStream(remote);
@@ -80,7 +74,6 @@ export default function VideoCallModal({
                     const offerDescription = await pc.createOffer();
                     await pc.setLocalDescription(offerDescription);
 
-                    // Dejamos el status como 'ringing' para que useGlobalNotifications lo lea bien
                     const offer = {
                         sdp: offerDescription.sdp,
                         type: offerDescription.type,
