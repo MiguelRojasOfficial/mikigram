@@ -111,8 +111,7 @@ export default function VideoCallModal({
                 } else {
                     // --- FLUX RECEPTOR ---
                     setcallStatus('Conectando...');
-                    //await updateDoc(callDocRef, { status: 'accepted' });
-                    
+                                
                     const iceCandidatesCol = collection(callDocRef, 'calleeCandidates');
                     pc.onicecandidate = (event) => {
                         if (event.candidate) addDoc(iceCandidatesCol, event.candidate.toJSON());
