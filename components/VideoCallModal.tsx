@@ -111,7 +111,7 @@ export default function VideoCallModal({
                 } else {
                     // --- FLUX RECEPTOR ---
                     setcallStatus('Conectando...');
-                    await updateDoc(callDocRef, { status: 'accepted' });
+                    //await updateDoc(callDocRef, { status: 'accepted' });
                     
                     const iceCandidatesCol = collection(callDocRef, 'calleeCandidates');
                     pc.onicecandidate = (event) => {
@@ -122,16 +122,23 @@ export default function VideoCallModal({
                         const data = snap.data();
                         if (!data) return;
 
-                        if (data.offer && !data.answer && !pc.currentRemoteDescription) {
-                            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-                            const answerDescription = await pc.createAnswer();
-                            await pc.setLocalDescription(answerDescription);
-                            await updateDoc(callDocRef, { 
-                                answer: { type: answerDescription.type, sdp: answerDescription.sdp } 
-                            });
-                        }
                         if (data.status === 'ended' && !isEndingRef.current) {
                             closeStreamsAndUI();
+                            return;
+                        }
+
+                        if (data.offer && !data.answer && !pc.currentRemoteDescription) {
+                            try {
+                                await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                                const answerDescription = await pc.createAnswer();
+                                await pc.setLocalDescription(answerDescription);
+                                await updateDoc(callDocRef, {
+                                    status: 'accepted',
+                                    answer: { type: answerDescription.type, sdp: answerDescription.sdp } 
+                                });
+                            } catch (e) {
+                                console.error("Error al responder llamada:", e);
+                            }
                         }
                     });
 
