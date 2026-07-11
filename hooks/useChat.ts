@@ -8,7 +8,14 @@ export const useChat = (chatId: string | null, userId: string | undefined) => {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId) {
+      setMessages([]);
+      setIsRecipientTyping(false);
+     return;
+    }
+
+    setMessages([]);
+    setIsRecipientTyping(false);
 
     const q = query(
       collection(db, "chats", chatId, "messages"),
@@ -40,20 +47,24 @@ export const useChat = (chatId: string | null, userId: string | undefined) => {
     if (!chatId || !userId) return;
 
     const markMessagesAsRead = async () => {
-      const messagesRef = collection(db, "chats", chatId, "messages");
-      const q = query(messagesRef, where("senderId", "!=", userId), where("read", "==", false));
-      const querySnapshot = await getDocs(q);
+      try {
+        const messagesRef = collection(db, "chats", chatId, "messages");
+        const q = query(messagesRef, where("senderId", "!=", userId), where("read", "==", false));
+        const querySnapshot = await getDocs(q);
 
-      if (querySnapshot.empty) return;
+        if (querySnapshot.empty) return;
 
-      const batch = writeBatch(db);
-      querySnapshot.forEach((msgDoc) => {
-        batch.update(msgDoc.ref, { read: true });
-      });
-      await batch.commit();
+        const batch = writeBatch(db);
+        querySnapshot.forEach((msgDoc) => {
+          batch.update(msgDoc.ref, { read: true });
+        });
+        await batch.commit();
+      } catch (error) {
+        console.error("Error al marcar como leido:", error);
+      }
     };
     markMessagesAsRead();
-  }, [chatId, messages, userId]);
+  }, [chatId, userId]);
 
   const sendMessage = async (payload: { text?: string; fileURL?: string; type: 'text' | 'image' | 'file' }, senderId: string) => {
     if (!chatId) return;
@@ -87,7 +98,7 @@ export const useChat = (chatId: string | null, userId: string | undefined) => {
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
-      console.error("Faltan las credenciales de Cloudinary en el archivo .env.local");
+      console.error("Faltan las credenciales de Cloudinary");
       return;
     }
 
@@ -124,7 +135,7 @@ export const useChat = (chatId: string | null, userId: string | undefined) => {
       };
 
       xhr.onerror = () => {
-        console.error("Error de conexión al subir a Cloudinary");
+        console.error("Error de conexión a Cloudinary");
         setUploadProgress(null);
       };
 
@@ -171,7 +182,7 @@ export const useChat = (chatId: string | null, userId: string | undefined) => {
       const chatRef = doc(db, "chats", chatId);
       await updateDoc(chatRef, {
         lastMessage: "Mensaje eliminado",
-        updateAt: serverTimestamp()
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       console.error("Error al eliminar el mensaje:", error);

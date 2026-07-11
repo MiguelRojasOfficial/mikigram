@@ -38,18 +38,31 @@ export default function ChatWindow() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!selectedChat) return;
+    setIsIncomingcall(false);
+    setShowVideoCall(false);
+    if (!selectedChat || !user?.uid) return;
 
-    const callRef = collection(db, "chats", selectedChat, "call");
-    const unsubscribe = onSnapshot(doc(db, "chats", selectedChat, "call", "current"), (snap) => {
+    const docRef = doc(db, "chats", selectedChat, "call", "current");
+    //const callRef = collection(db, "chats", selectedChat, "call");
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+      if (!snap.exists()) return;
+
       const data = snap.data();
-      if (data?.offer && data.offer.callerId !== user?.uid && data.offer.status === 'ringing' && data.status !== 'ended' && data.status !== 'accepted') {
+      if (
+        data?.offer && 
+        data.offer.callerId !== user?.uid && 
+        data.offer.status === 'ringing' && 
+        data.status !== 'ended' && 
+        data.status !== 'accepted'
+      ) {
         setIsIncomingcall(true);
         setShowVideoCall(true);
       }
+    }, (err) => {
+      console.error("Error en listener de llamada:", err);
     });
     return () => unsubscribe();
-  }, [selectedChat, user]);
+  }, [selectedChat, user?.uid]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
