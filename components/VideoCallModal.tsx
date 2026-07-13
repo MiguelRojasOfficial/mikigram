@@ -157,7 +157,6 @@ export default function VideoCallModal({
         };
     }, [isIncoming, chatId]);
 
-    // Apaga el hardware y desmonta de pantalla
     const closeStreamsAndUI = () => {
         isEndingRef.current = true;
         if (localStream) {
@@ -170,7 +169,6 @@ export default function VideoCallModal({
         onClose();
     };
 
-    // Detonador manual del botón rojo para colgar
     const handleHangUp = async () => {
         if (isEndingRef.current) return;
         try {

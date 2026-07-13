@@ -35,25 +35,28 @@ export default function Home() {
 
   return (
     <main className="flex h-screen w-full bg-[#f0f2f5] dark:bg-[#111b20] overflow-hidden">
-      <aside className="w-full max-w-[400px] border-r border-gray-300 dark:border-gray-700 bg-white dark:bg-[#111b20] flex flex-col">
-        <header className="h-[60px] p-4 flex justify-between items-center bg-[#f0f2f5] dark:bg-[#202c33]">
-          <div className="flex items-center gap-3">
-            <img 
-              src={user.photoURL || ""} 
-              alt="Profile" 
-              className="w-10 h-10 rounded-full border "
-            />
-            <span className="text-xs font-bold dark:text-white">
-              {user.displayName?.split(' ')[0]}
-            </span>
-          </div>
-          <div className="flex gap-4 text-gray-500">
-            <button onClick={logout} title="Cerrar sesión">
-              <LogOut size={20} className="hover:text-red-500 transition-colors" />
-            </button>
-            <MoreVertical size={20} />
-          </div>
-        </header>
+      <aside 
+        className={`${
+          selectedChat ? 'hidden md:flex' : 'flex'
+        } w-full md:max-w-[400px] border-r border-gray-300 dark:border-gray-700 bg-white dark:bg-[#111b20] flex-col flex-shrink-0 h-full`}>
+          <header className="h-[60px] p-4 flex justify-between items-center bg-[#f0f2f5] dark:bg-[#202c35]">
+            <div className="flex items-center gap-3">
+              <img 
+                src={user.photoURL || ""} 
+                alt="Profile" 
+                className="w-10 h-10 rounded-full border "
+              />
+              <span className="text-xs font-bold dark:text-white">
+                {user.displayName?.split(' ')[0]}
+              </span>
+            </div>
+            <div className="flex gap-4 text-gray-500">
+              <button onClick={logout} title="Cerrar sesión">
+                <LogOut size={20} className="hover:text-red-500 transition-colors" />
+              </button>
+              <MoreVertical size={20} />
+            </div>
+          </header>
 
         <form onSubmit={handleSearchSubmit} className="p-2 px-4">
           <div className="bg-gray-100 dark:bg-[#202c35] flex items-center px-3 py-1.5 rounded-lg">
@@ -157,7 +160,10 @@ export default function Home() {
           )}
         </div>
       </aside>
-      <ChatWindow />
+      <div className={`${selectedChat ? 'flex' : 'hidden md:flex'} flex-1 h-full min-w-0`}>
+        <ChatWindow />
+      </div>
+      
     </main>
   );
 }

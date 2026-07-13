@@ -43,7 +43,6 @@ export default function ChatWindow() {
     if (!selectedChat || !user?.uid) return;
 
     const docRef = doc(db, "chats", selectedChat, "call", "current");
-    //const callRef = collection(db, "chats", selectedChat, "call");
     const unsubscribe = onSnapshot(docRef, (snap) => {
       if (!snap.exists()) return;
 
@@ -106,6 +105,10 @@ export default function ChatWindow() {
   const handleContextMenu = (e: React.MouseEvent, msg: any) => {
     if (msg.senderId !== user?.uid || msg.isDeleted) return;
     e.preventDefault();
+
+    const clientX = 'clientX' in e ? e.clientX : (e as any).touches[0].clientX;
+    const clientY = 'clientY' in e ? e.clientY : (e as any).touches[0].clientY;
+
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
@@ -215,6 +218,15 @@ export default function ChatWindow() {
     <section className="flex-1 flex flex-col bg-[#efeae2] dark:bg-[#0b141a] h-full relative">
       <header className="h-[60px] p-4 bg-[#f0f2f5] dark:bg-[#202c35] flex items-center justify-between border-l border-gray-300 dark:border-gray-700 shadow-sm z-10">
         <div className="flex items-center gap-3 min-w-0">
+          
+          
+          
+          <button
+            onClick={() => setSelectedChat(null)}
+            className="md:hidden p-1 mr-1 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
           {activeRecipient?.photoURL ? (
             <img src={activeRecipient.photoURL} alt="" className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-600" />
           ) : (
@@ -261,11 +273,15 @@ export default function ChatWindow() {
             <div
               key={msg.id}
               onContextMenu={(e) => handleContextMenu(e, msg)}
-              className={`max-w-md p-2.5 rounded-xl shadow-sm transition-all duration-200 animate-in fade-in slide-in-from-bottom-2 select-none ${
+              onTouchStart={(e) => {
+                const timer = setTimeout(() => handleContextMenu(e, msg), 600);
+                e.currentTarget.addEventListener('touchend', () => clearTimeout(timer), { once: true });
+              }}
+              className={`max-w-[85%] md:max-w-md p-2.5 rounded-xl shadow-sm transition-all duration-200 animate-in fade-in slide-in-from-bottom-2 select-none ${
                 isMe
                   ? 'bg-[#dcf8c6] dark:bg-[#005c4b] text-gray-900 dark:text-white self-end rounded-tr-none'
                   : 'bg-white dark:bg-[#202c35] text-gray-900 dark:text-gray-100 self-start rounded-tl-none'
-              } ${isImage ? 'p-1 max-w-[280px]' : 'px-4 py-2.5'} ${msg.isDeleted ? 'opacity-60 italic' : ''}`}
+              } ${isImage ? 'p-1 max-w-[240px] md:max-w-[280px]' : 'px-3 md:px-4 py-2.5'} ${msg.isDeleted ? 'opacity-60 italic' : ''}`}
             >
               {isImage && msg.fileURL && (
                 <a href={msg.fileURL} target="_blank" rel="noreferrer" className="overflow-hidden rounded-lg block cursor-zoom-in">
@@ -280,13 +296,13 @@ export default function ChatWindow() {
                   rel="noreferrer"
                   className="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors text-blue-600 dark:text-blue-400 font-medium text-xs mb-1"
                 >
-                  <FileText size={28} className="text-gray-500 dark:text-gray-400" />
-                  <span className="truncate max-w-[180px] text-gray-800 dark:text-gray-200">{msg.text || 'Descargar archivo'}</span>
+                  <FileText size={24} className="text-gray-500 dark:text-gray-400" />
+                  <span className="truncate max-w-[140px] md:max-w-[180px] text-gray-800 dark:text-gray-200">{msg.text || 'Descargar archivo'}</span>
                 </a>
               )}
 
               {(!isImage && !isFile) && (
-                <p className="break-words leading-relaxed with-emoji-support">
+                <p className="break-words leading-relaxed text-sm md:text-base with-emoji-support">
                   {msg.text}
                   {msg.isEdited && !msg.isDeleted && (
                     <span className="text-[10px] text-gray-400 dark:text-gray-400 ml-1.5 select-none">(editado)</span>
@@ -343,14 +359,14 @@ export default function ChatWindow() {
       )}
 
       {uploadProgress !== null && (
-        <div className="absolute bottom-4 right-6 bg-white dark:bg-[#202c35] p-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex items-center gap-3 animate-bounce z-20 text-xs font-medium text-gray-700 dark:text-gray-300">
+        <div className="absolute bottom-16 md:bottom-4 right-4 bg-white dark:bg-[#202c35] p-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex items-center gap-3 animate-bounce z-20 text-xs font-medium text-gray-700 dark:text-gray-300">
           <Loader2 size={16} className="animate-spin text-blue-500" />
           <span>Subiendo multimedia: {uploadProgress}%</span>
         </div>
       )}
 
       {editingMessage && (
-        <div className="px-6 py-2 bg-blue-50 dark:bg-[#18252d] border-l border-gray-300 dark:border-gray-700 flex items-center justify-between animate-in slide-in-from-bottom-2 text-xs font-medium text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/30">
+        <div className="px-4 md:px-6 py-2 bg-blue-50 dark:bg-[#18252d] border-l border-gray-300 dark:border-gray-700 flex items-center justify-between animate-in slide-in-from-bottom-2 text-xs font-medium text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/30">
           <div className="flex items-center gap-2 truncate">
             <Pencil size={14} />
             <span className="truncate">Editando mensaje: <span className="italic text-gray-500 dark:text-gray-400">"{editingMessage.text}"</span></span>
@@ -362,7 +378,7 @@ export default function ChatWindow() {
       )}
 
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black/80 blackdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#202c35] border border-gray-700 rounded-2xl overflow-hidden max-w-md w-full shadow-2xl relative flex flex-col">
             <header className="p-4 flex items-center justify-between border-b border-gray-700 bg-[#111b20]">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -418,16 +434,16 @@ export default function ChatWindow() {
         />
       )}
 
-      <footer className="p-3 bg-[#f0f2f5] dark:bg-[#202c35] border-l border-gray-300 dark:border-gray-700 flex items-center gap-3">
+      <footer className="p-2 md:p-4 bg-[#f0f2f5] dark:bg-[#202c35] border-l border-gray-300 dark:border-gray-700 flex items-center gap-2 md:gap-4">
         {showEmojiPicker && (
-          <div ref={emojiPickerRef} className="absolute bottom-[65px] left-4 z-50 shadow-2xl">
+          <div ref={emojiPickerRef} className="absolute bottom-[65px] left-2 right-2 z-50 shadow-2xl max-w-[95vw] md:max-w-[560px]">
             <EmojiPicker
               onEmojiClick={handleEmojiClick}
               autoFocusSearch={false}
               theme={Theme.AUTO}
               emojiStyle={EmojiStyle.TWITTER}
-              width={560}
-              height={560}
+              width="100%"
+              height={380}
             />
           </div>
         )}
@@ -440,7 +456,7 @@ export default function ChatWindow() {
           accept="image/*, application/pdf, text/plain, application/zip"
         />
 
-        <div className="flex gap-3 text-gray-500 dark:text-gray-400">
+        <div className="flex gap-2 md:gap-4 text-gray-500 dark:text-gray-400 flex-shrink-0">
           <Smile 
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className={`cursor-pointer transition-colors ${showEmojiPicker ? 'text-blue-500 dark:text-blue-400' : 'hover:text-gray-700 dark:hover:text-gray-200'}`}
@@ -453,15 +469,16 @@ export default function ChatWindow() {
           />
           <Paperclip
             onClick={() => fileInputRef.current?.click()}
-            className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors" size={20}
+            className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors" 
+            size={20}
           />
         </div>
 
-        <form onSubmit={handleSend} className="flex-1 flex gap-3">
+        <form onSubmit={handleSend} className="flex-1 flex gap-2">
           <input
             value={text}
             onChange={handleInputChange}
-            className="flex-1 bg-white dark:bg-[#2a3942] border-none outline-none p-2.5 px-4 rounded-lg text-sm text-gray-700 dark:text-gray-200 shadow-inner placeholder-gray-400 with-emoji-support"
+            className="flex-1 bg-white dark:bg-[#2a3942] border-none outline-none p-2 px-4 md:p-2.5 md:px-4 rounded-lg text-sm text-gray-700 dark:text-gray-200 shadow-inner placeholder-gray-400 min-w-0 with-emoji-support"
             placeholder={editingMessage ? "Modifica tu mensaje aquí..." : "Escribe un mensaje aquí ....."}
           />
           <button
@@ -469,7 +486,7 @@ export default function ChatWindow() {
             disabled={!text.trim()}
             className={`${
               editingMessage ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-blue-500 hover:bg-blue-600'
-            } disabled:opacity-40 text-white p-2.5 rounded-lg transition-all shadow-md active:scale-95`}
+            } disabled:opacity-40 text-white p-2 md:p-2.5 rounded-lg transition-all shadow-md active:scale-95 flex-shrink-0`}
           >
             <Send size={20} />
           </button>
