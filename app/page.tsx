@@ -44,7 +44,7 @@ export default function Home() {
               <img 
                 src={user.photoURL || ""} 
                 alt="Profile" 
-                className="w-10 h-10 rounded-full border "
+                className="w-10 h-10 rounded-full border"
               />
               <span className="text-xs font-bold dark:text-white">
                 {user.displayName?.split(' ')[0]}
@@ -78,9 +78,10 @@ export default function Home() {
                 <button 
                   type="button" 
                   onClick={handleClearSearch} 
-                  className="text-gray-400 hover:text-gray-200">
-                    <X size={16} />
-                  </button>
+                  className="text-gray-400 hover:text-gray-200"
+                >
+                  <X size={16} />
+                </button>
               )}
             </div>
           </div>
@@ -162,8 +163,7 @@ export default function Home() {
       </aside>
       <div className={`${selectedChat ? 'flex' : 'hidden md:flex'} flex-1 h-full min-w-0`}>
         <ChatWindow />
-      </div>
-      
+      </div>     
     </main>
   );
 }
