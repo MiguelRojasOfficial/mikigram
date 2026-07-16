@@ -102,12 +102,22 @@ export default function ChatWindow() {
     await uploadFileAndSendMessage(file, user.uid);
   };
 
-  const handleContextMenu = (e: React.MouseEvent, msg: any) => {
+  const handleContextMenu = (e: React.MouseEvent | React.TouchEvent, msg: any) => {
     if (msg.senderId !== user?.uid || msg.isDeleted) return;
     e.preventDefault();
 
-    const clientX = 'clientX' in e ? e.clientX : (e as any).touches[0].clientX;
-    const clientY = 'clientY' in e ? e.clientY : (e as any).touches[0].clientY;
+    let clientX = 0;
+    let clientY = 0;
+
+    if ('touches' in e) {
+      if (e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      }
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
 
     setContextMenu({
       x: e.clientX,
