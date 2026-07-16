@@ -160,7 +160,6 @@ export default function ChatWindow() {
     const capturePhoto = async () => {
       if (!videoRef.current || !user) return;
       const videoElement = videoRef.current;
-
       const canvas = document.createElement('canvas');
       canvas.width = videoElement.videoWidth;
       canvas.height = videoElement.videoHeight;
