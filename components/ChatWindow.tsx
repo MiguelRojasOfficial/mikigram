@@ -49,9 +49,9 @@ export default function ChatWindow() {
       const data = snap.data();
       if (
         data?.offer && 
-        data.offer.callerId !== user?.uid && 
-        data.offer.status === 'ringing' && 
-        data.status !== 'ended' && 
+        data.offer.callerId !== user?.uid &&
+        data.offer.status === 'ringing' &&
+        data.status !== 'ended' &&
         data.status !== 'accepted'
       ) {
         setIsIncomingcall(true);
