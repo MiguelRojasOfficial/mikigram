@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, use } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useChatStore } from '@/store/useChatStore';
 import { db } from '@/lib/firebase'
-import { Smile, Paperclip, Send, Shield, Phone, Video, FileText, Loader2, Pencil, Trash2, X, Camera } from 'lucide-react';
+import { Smile, Paperclip, Send, Shield, Phone, Video, FileText, Loader2, Pencil, Trash2, X, Camera, ArrowLeft } from 'lucide-react';
 import EmojiPicker, { EmojiStyle, Theme } from 'emoji-picker-react';
 import { doc, onSnapshot, collection } from 'firebase/firestore';
 import VideoCallModal from './VideoCallModal';
@@ -218,9 +218,6 @@ export default function ChatWindow() {
     <section className="flex-1 flex flex-col bg-[#efeae2] dark:bg-[#0b141a] h-full relative">
       <header className="h-[60px] p-4 bg-[#f0f2f5] dark:bg-[#202c35] flex items-center justify-between border-l border-gray-300 dark:border-gray-700 shadow-sm z-10">
         <div className="flex items-center gap-3 min-w-0">
-          
-          
-          
           <button
             onClick={() => setSelectedChat(null)}
             className="md:hidden p-1 mr-1 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
