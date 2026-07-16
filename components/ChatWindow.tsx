@@ -10,7 +10,7 @@ import { doc, onSnapshot, collection } from 'firebase/firestore';
 import VideoCallModal from './VideoCallModal';
 
 export default function ChatWindow() {
-  const { selectedChat, user, activeRecipient } = useChatStore();
+  const { selectedChat, user, activeRecipient, setSelectedChat } = useChatStore();
   const { 
     messages, 
     sendMessage, 
