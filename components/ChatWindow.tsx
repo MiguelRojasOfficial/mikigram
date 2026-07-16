@@ -28,7 +28,7 @@ export default function ChatWindow() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
-  const [isIncomingCall, setIsIncomingcall] = useState(false);
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,7 +38,7 @@ export default function ChatWindow() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    setIsIncomingcall(false);
+    setIsIncomingCall(false);
     setShowVideoCall(false);
     if (!selectedChat || !user?.uid) return;
 
@@ -54,7 +54,7 @@ export default function ChatWindow() {
         data.status !== 'ended' &&
         data.status !== 'accepted'
       ) {
-        setIsIncomingcall(true);
+        setIsIncomingCall(true);
         setShowVideoCall(true);
       }
     }, (err) => {
@@ -245,7 +245,7 @@ export default function ChatWindow() {
         <div className="flex items-center gap-5 text-gray-500 dark:text-gray-400">
           <Video
             onClick={() => {
-              setIsIncomingcall(false);
+              setIsIncomingCall(false);
               setShowVideoCall(true);
             }}
             size={20} 
