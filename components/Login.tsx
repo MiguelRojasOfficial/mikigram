@@ -65,7 +65,8 @@ export default function Login() {
         } catch (err: any) {
             console.error(err);
             setError('Error al enviar SMS. Verifica el número o intenta más tarde.');
-            appVerifier.render().then(widgetId => appVerifier.reset(widgetId));
+            appVerifier.clear();
+            recaptchaVerifierRef.current = null;
         } finally {
             setLoading(false);
         }
