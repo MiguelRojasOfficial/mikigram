@@ -1,30 +1,38 @@
 'use client'
 
-import { useState, useEffect, useRef} from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { auth, db } from '@/lib/firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } form 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { MessageSquare, ShieldCheck, Phone, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
+    // 1. Estados de la interfaz
     const [phoneNumber, setPhoneNumber] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
     const [isCodeSent, setIsCodeSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // 2. Referencias para Firebase Auth / reCAPTCHA
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
+
+    // 3. Hook de autenticación personalizado
     const { loginWithGoogle } = useAuth();
 
+    // --- Efecto: Inicializar reCAPTCHA invisible ---
     useEffect(() => {
         if (!recaptchaVerifierRef.current && auth) {
             try {
                 recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
                     'size': 'invisible',
-                    'callback': () => {},
+                    'callback': () => {
+                        // reCAPTCHA resuelto correctamente
+                    },
                     'expired-callback': () => {
-                        setError('El reCAPTCHA expiró.');
+                        setError('El reCAPTCHA expiró. Inténtalo de nuevo.');
                     }
                 });
             } catch (err) {
@@ -40,12 +48,13 @@ export default function Login() {
         };
     }, []);
 
-    const handleSendCode = async (e?: RecaptchaVerifier.FormEvent) => {
+    // --- Flujo 1: Enviar SMS ---
+    const handleSendCode = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         setError('');
         setLoading(true);
-     
-        if (!phoneNumber.starts('+') || phoneNumber.length <10) {
+
+        if (!phoneNumber.startsWith('+') || phoneNumber.length < 10) {
             setError('Ingresa el número con formato internacional (ej: +51999...)');
             setLoading(false);
             return;
@@ -71,6 +80,7 @@ export default function Login() {
         }
     };
 
+    // --- Flujo 2: Verificar Código y Sincronizar Firestore ---
     const handleVerifyCode = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -92,23 +102,24 @@ export default function Login() {
 
                 if (!userDoc.exists()) {
                     await setDoc(userDocRef, {
-                        uid: user.id,
+                        uid: user.uid,
                         phoneNumber: user.phoneNumber,
                         displayName: `Usuario ${user.phoneNumber?.slice(-4)}`,
                         photoURL: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.uid}`,
-                        createAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString(),
                         loginMethod: 'phone'
                     });
                 }
             }
         } catch (err: any) {
             console.error(err);
-            setError('Codigo de verificación incorrecto o expirado.');
+            setError('Código de verificación incorrecto o expirado.');
         } finally {
             setLoading(false);
         }
     };
 
+    // --- Reiniciar flujo de teléfono ---
     const resetPhoneFlow = () => {
         setIsCodeSent(false);
         setVerificationCode('');
@@ -118,29 +129,30 @@ export default function Login() {
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-[#f0f2f5] dark:bg-[#111b20] p-4 relative">
             
+            {/* Contenedor invisible para reCAPTCHA */}
             <div id="recaptcha-container"></div>
 
             <div className="bg-white dark:bg-[#280e35] p-8 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center border border-gray-200 dark:border-gray-700 transition-all duration-300">
                 
                 {isCodeSent && (
-                    <button
-                        onClick={resetPhoneFlow}
+                    <button 
+                        onClick={resetPhoneFlow} 
                         className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 dark:hover:text-white flex items-center gap-2 text-sm"
                     >
                         <ArrowLeft size={16} />
                         Volver
                     </button>
                 )}
-                
-                <div className="h-20 w-20 bg-blue-500 rounded-3xl flex items-center justify-center shadow-lg mb-6 rotate-3 flex-shrink-0">
-                    <MessageSquare className="h-10 w-10 -rotate-3 text-white" />
+
+                <div className="h-16 w-16 bg-blue-500 rounded-3xl flex items-center justify-center shadow-lg mb-6 rotate-3 flex-shrink-0">
+                    <MessageSquare className="h-8 w-8 -rotate-3 text-white" />
                 </div>
 
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                     {isCodeSent ? 'Verifica tu número' : 'Entrar a Mikigram'}
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 text-center mb-6 text-sm px-4">
-                    {isCodeSent ? `Ingrese el código enviado a ${phoneNumber}` : 'Contactate con tu celular o cuenta de Google.'}
+                    {isCodeSent ? `Ingresa el código enviado a ${phoneNumber}` : 'Conéctate con tu celular o cuenta de Google.'}
                 </p>
 
                 {error && (
@@ -149,18 +161,20 @@ export default function Login() {
                     </div>
                 )}
 
+                {/* --- SECCIÓN CELULAR --- */}
                 <div className="w-full mb-6 space-y-4">
                     {!isCodeSent ? (
+                        /* PASO 1: Pedir Teléfono */
                         <form onSubmit={handleSendCode} className="space-y-3">
                             <div className="relative">
-                                <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input 
                                     type="tel"
                                     value={phoneNumber}
                                     onChange={(e) => setPhoneNumber(e.target.value)}
                                     placeholder="+51 999 888 777"
                                     disabled={loading}
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gary-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition"
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition"
                                 />
                             </div>
                             <button
@@ -168,21 +182,22 @@ export default function Login() {
                                 disabled={loading || !phoneNumber}
                                 className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
                             >
-                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Recibir código SMS'}
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Recibir código por SMS'}
                             </button>
                         </form>
                     ) : (
+                        /* PASO 2: Pedir Código (OTP) */
                         <form onSubmit={handleVerifyCode} className="space-y-3">
                             <div className="relative">
-                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
+                                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input 
                                     type="text"
                                     value={verificationCode}
                                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
                                     placeholder="Código de 6 dígitos"
                                     maxLength={6}
                                     disabled={loading}
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gary-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white text-center tracking-[0.5em] font-bold text-lg focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white text-center tracking-[0.5em] font-bold text-lg focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
                                 />
                             </div>
                             <button
@@ -190,12 +205,13 @@ export default function Login() {
                                 disabled={loading || verificationCode.length !== 6}
                                 className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
                             >
-                                {loading ? <Loader2 className="h-5 w-5 animate-spin"/> : 'Verificar e ingresar'}
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verificar e Ingresar'}
                             </button>
                         </form>
                     )}
                 </div>
 
+                {/* --- SEPARADOR --- */}
                 {!isCodeSent && (
                     <div className="w-full flex items-center gap-3 mb-6">
                         <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
@@ -203,14 +219,15 @@ export default function Login() {
                         <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
                     </div>
                 )}
-                
+
+                {/* --- OPCIONES SECUNDARIAS --- */}
                 {!isCodeSent && (
                     <>
                         <div className="w-full space-y-3 mb-6">
                             <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#2a3942] border border-gray-100 dark:border-gray-700 shadow-inner">
                                 <ShieldCheck size={20} className="text-green-500" />
                                 <span className="text-xs font-medium dark:text-gray-200 truncate">Acceso seguro y verificado</span>
-                            </div>                  
+                            </div>
                         </div>
 
                         <button
