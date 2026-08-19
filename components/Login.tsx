@@ -1,5 +1,242 @@
 'use client'
 
+import { useState, useEffect, useRef} from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { auth, db } from '@/lib/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } form 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { MessageSquare, ShieldCheck, Phone, Lock, Loader2, ArrowLeft } from 'lucide-react';
+
+export default function Login() {
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [isCodeSent, setIsCodeSent] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+    const confirmationResultRef = useRef<ConfirmationResult | null>(null);
+    const { loginWithGoogle } = useAuth();
+
+    useEffect(() => {
+        if (!recaptchaVerifierRef.current && auth) {
+            try {
+                recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    'size': 'invisible',
+                    'callback': () => {},
+                    'expired-callback': () => {
+                        setError('El reCAPTCHA expiró.');
+                    }
+                });
+            } catch (err) {
+                console.error("Error inicializando reCAPTCHA:", err);
+            }
+        }
+
+        return () => {
+            if (recaptchaVerifierRef.current) {
+                recaptchaVerifierRef.current.clear();
+                recaptchaVerifierRef.current = null;
+            }
+        };
+    }, []);
+
+    const handleSendCode = async (e?: RecaptchaVerifier.FormEvent) => {
+        if (e) e.preventDefault();
+        setError('');
+        setLoading(true);
+     
+        if (!phoneNumber.starts('+') || phoneNumber.length <10) {
+            setError('Ingresa el número con formato internacional (ej: +51999...)');
+            setLoading(false);
+            return;
+        }
+
+        const appVerifier = recaptchaVerifierRef.current;
+        if (!appVerifier) {
+            setError('El verificado de seguridad no está listo.');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+            confirmationResultRef.current = confirmationResult;
+            setIsCodeSent(true);
+        } catch (err: any) {
+            console.error(err);
+            setError('Error al enviar SMS. Verifica el número o intenta más tarde.');
+            appVerifier.render().then(widgetId => appVerifier.reset(widgetId));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyCode = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        if (!confirmationResultRef.current) {
+            setError('No hay una sesión de verificación activa.');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const result = await confirmationResultRef.current.confirm(verificationCode);
+            const user = result.user;
+
+            if (user) {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (!userDoc.exists()) {
+                    await setDoc(userDocRef, {
+                        uid: user.id,
+                        phoneNumber: user.phoneNumber,
+                        displayName: `Usuario ${user.phoneNumber?.slice(-4)}`,
+                        photoURL: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.uid}`,
+                        createAt: new Date().toISOString(),
+                        loginMethod: 'phone'
+                    });
+                }
+            }
+        } catch (err: any) {
+            console.error(err);
+            setError('Codigo de verificación incorrecto o expirado.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPhoneFlow = () => {
+        setIsCodeSent(false);
+        setVerificationCode('');
+        confirmationResultRef.current = null;
+    };
+
+    return (
+        <div className="min-h-screen w-full flex items-center justify-center bg-[#f0f2f5] dark:bg-[#111b20] p-4 relative">
+            
+            <div id="recaptcha-container"></div>
+
+            <div className="bg-white dark:bg-[#280e35] p-8 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center border border-gray-200 dark:border-gray-700 transition-all duration-300">
+                
+                {isCodeSent && (
+                    <button
+                        onClick={resetPhoneFlow}
+                        className="absolute top-6 left-6 text-gray-500 hover:text-gray-800 dark:hover:text-white flex items-center gap-2 text-sm"
+                    >
+                        <ArrowLeft size={16} />
+                        Volver
+                    </button>
+                )}
+                
+                <div className="h-20 w-20 bg-blue-500 rounded-3xl flex items-center justify-center shadow-lg mb-6 rotate-3 flex-shrink-0">
+                    <MessageSquare className="h-10 w-10 -rotate-3 text-white" />
+                </div>
+
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                    {isCodeSent ? 'Verifica tu número' : 'Entrar a Mikigram'}
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 text-center mb-6 text-sm px-4">
+                    {isCodeSent ? `Ingrese el código enviado a ${phoneNumber}` : 'Contactate con tu celular o cuenta de Google.'}
+                </p>
+
+                {error && (
+                    <div className="w-full p-3 mb-4 rounded-xl bg-red-100 border border-red-300 text-red-800 text-xs text-center font-medium">
+                        {error}
+                    </div>
+                )}
+
+                <div className="w-full mb-6 space-y-4">
+                    {!isCodeSent ? (
+                        <form onSubmit={handleSendCode} className="space-y-3">
+                            <div className="relative">
+                                <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input 
+                                    type="tel"
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    placeholder="+51 999 888 777"
+                                    disabled={loading}
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gary-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading || !phoneNumber}
+                                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
+                            >
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Recibir código SMS'}
+                            </button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleVerifyCode} className="space-y-3">
+                            <div className="relative">
+                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="Código de 6 dígitos"
+                                    maxLength={6}
+                                    disabled={loading}
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gary-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white text-center tracking-[0.5em] font-bold text-lg focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading || verificationCode.length !== 6}
+                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
+                            >
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin"/> : 'Verificar e ingresar'}
+                            </button>
+                        </form>
+                    )}
+                </div>
+
+                {!isCodeSent && (
+                    <div className="w-full flex items-center gap-3 mb-6">
+                        <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+                        <span className="text-xs text-gray-400 font-medium">o</span>
+                        <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                )}
+                
+                {!isCodeSent && (
+                    <>
+                        <div className="w-full space-y-3 mb-6">
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#2a3942] border border-gray-100 dark:border-gray-700 shadow-inner">
+                                <ShieldCheck size={20} className="text-green-500" />
+                                <span className="text-xs font-medium dark:text-gray-200 truncate">Acceso seguro y verificado</span>
+                            </div>                  
+                        </div>
+
+                        <button
+                            onClick={loginWithGoogle}
+                            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-transparent border border-gray-300 dark:border-gray-600 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#2a3942] transition-all duration-200 shadow-sm font-semibold text-gray-700 dark:text-gray-200"
+                        >
+                            <img 
+                                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+                                alt="Google" 
+                                className="w-5 h-5"
+                            />
+                            Continuar con Google
+                        </button>
+                    </>
+                )}
+
+                <footer className="mt-8 text-xs text-gray-400 text-center">
+                    Al continuar, aceptas los términos de servicio de Mikigram.
+                </footer>
+            </div>
+        </div>
+    );
+}
+ /*
+ 'use client'
+
 import { useAuth } from '@/hooks/useAuth';
 import { MessageSquare, ShieldCheck, Zap } from 'lucide-react';
 
@@ -50,333 +287,4 @@ export default function Login() {
         </div>
     );
 }
- /*
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import { auth, db } from '@/lib/firebase';
-import { 
-    RecaptchaVerifier, 
-    signInWithPhoneNumber, 
-    ConfirmationResult,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
-import { Phone, Lock, Loader2, MessageSquare, Mail, User } from 'lucide-react';
-
-export default function LoginPage() {
-    const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const router = useRouter();
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [displayName, setDisplayName] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [verificationCode, setVerificationCode] = useState('');
-    const [isCodeSent, setIsCodeSent] = useState(false);  
-    const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-    const confirmationResultRef = useRef<ConfirmationResult | null>(null);
-
-    useEffect(() => {
-        if (!recaptchaVerifierRef.current && loginMethod === 'phone') {
-            try {
-                recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                    size: 'invisible',
-                    'expired-callback': () => {
-                        setError('El reCAPTCHA expiró. Por favor, intenta de nuevo.');
-                    }
-                });
-            } catch (err) {
-                console.error('Error al inicializar reCAPTCHA:', err);
-            }
-        }
-
-        return () => {
-            if (recaptchaVerifierRef.current) {
-                recaptchaVerifierRef.current.clear();
-                recaptchaVerifierRef.current = null;
-            }
-        };
-    }, [loginMethod]);
-
-    const handleEmailAuth = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-            let userCredential;
-            if (isRegistering) {
-                userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                await setDoc(doc(db, 'users', user.uid), {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: displayName || email.split('@')[0],
-                    photoURL: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.uid}`,
-                    createdAt: new Date().toISOString(),
-                });
-            } else {
-                userCredential = await signInWithEmailAndPassword(auth, email, password);
-            }
-
-            if (userCredential.user) router.push('/');
-        } catch (err: any) {
-            console.error(err);
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                setError('Credenciales incorrectas.');
-            } else if (err.code === 'auth/email-already-in-use') {
-                setError('Este correo ya está registrado.');
-            } else {
-                setError('Ocurrió un error al intentar autenticar.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSendSMS = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        if (!phoneNumber.startsWith('+')) {
-            setError('Incluye el código de país (Ej: +51987654321)');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const appVerifier = recaptchaVerifierRef.current;
-            if (!appVerifier) throw new Error('Verificador de seguridad no listo.');
-
-            const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-            confirmationResultRef.current = confirmationResult;
-            setIsCodeSent(true);
-        } catch (err: any) {
-            console.error(err);
-            setError('Error al enviar el SMS. Verifica el formato del número.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleVerifySMSCode = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        if (!confirmationResultRef.current) {
-            setError('Sesión expirada. Envía el código de nuevo.');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const result = await confirmationResultRef.current.confirm(verificationCode);
-            const user = result.user;
-
-            if (user) {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-
-                if (!userDoc.exists()) {
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        phoneNumber: user.phoneNumber,
-                        displayName: `User ${user.phoneNumber?.slice(-4)}`,
-                        photoURL: `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.uid}`,
-                        createdAt: new Date().toISOString(),
-                    });
-                }
-                router.push('/');
-            }
-        } catch (err) {
-            setError('Código de verificación incorrecto.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-[#0b141a] flex items-center justify-center p-4">
-            <div id="recaptcha-container"></div>
-
-            <div className="w-full max-w-md bg-[#111b20] rounded-2xl p-8 border border-gray-800 shadow-xl text-gray-200">
-                
-               
-                <div className="flex flex-col items-center mb-6 text-center">
-                    <div className="p-4 bg-[#202c35] rounded-full text-blue-500 mb-3">
-                        <MessageSquare size={36} />
-                    </div>
-                    <h1 className="text-2xl font-bold text-white">Mikigram</h1>
-                    <p className="text-xs text-gray-400 mt-1">Elige tu método de ingreso favorito</p>
-                </div>
-
-                
-                {!isCodeSent && (
-                    <div className="flex bg-[#202c35] p-1 rounded-xl mb-6 border border-gray-700">
-                        <button
-                            type="button"
-                            onClick={() => { setLoginMethod('email'); setError(''); }}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${loginMethod === 'email' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
-                        >
-                            Correo Electrónico
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setLoginMethod('phone'); setError(''); }}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${loginMethod === 'phone' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
-                        >
-                            Número de Celular
-                        </button>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="mb-4 p-3 bg-red-900/40 border border-red-500 text-red-200 text-sm rounded-lg text-center">
-                        {error}
-                    </div>
-                )}
-
-             
-                {loginMethod === 'email' && (
-                    <form onSubmit={handleEmailAuth} className="space-y-4">
-                        {isRegistering && (
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Nombre Completo</label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><User size={16} /></span>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Tu nombre"
-                                        value={displayName}
-                                        onChange={(e) => setDisplayName(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-[#202c35] rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 text-white text-sm"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Correo Electrónico</label>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><Mail size={16} /></span>
-                                <input
-                                    type="email"
-                                    required
-                                    placeholder="ejemplo@correo.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-[#202c35] rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 text-white text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Contraseña</label>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><Lock size={16} /></span>
-                                <input
-                                    type="password"
-                                    required
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-[#202c35] rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 text-white text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
-                        >
-                            {loading ? <Loader2 className="animate-spin" size={18} /> : (isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión')}
-                        </button>
-
-                        <div className="text-center mt-4">
-                            <button
-                                type="button"
-                                onClick={() => setIsRegistering(!isRegistering)}
-                                className="text-xs text-blue-400 hover:underline"
-                            >
-                                {isRegistering ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate aquí'}
-                            </button>
-                        </div>
-                    </form>
-                )}
-
-               
-                {loginMethod === 'phone' && (
-                    <div className="space-y-4">
-                        {!isCodeSent ? (
-                            <form onSubmit={handleSendSMS} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Número de Celular</label>
-                                    <div className="relative">
-                                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><Phone size={16} /></span>
-                                        <input
-                                            type="tel"
-                                            required
-                                            placeholder="+51987654321"
-                                            value={phoneNumber}
-                                            onChange={(e) => setPhoneNumber(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-[#202c35] rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 text-white text-sm"
-                                        />
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
-                                >
-                                    {loading ? <Loader2 className="animate-spin" size={18} /> : 'Enviar código por SMS'}
-                                </button>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleVerifySMSCode} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Código de Verificación</label>
-                                    <div className="relative">
-                                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><Lock size={16} /></span>
-                                        <input
-                                            type="text"
-                                            required
-                                            maxLength={6}
-                                            placeholder="000000"
-                                            value={verificationCode}
-                                            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-[#202c35] rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 text-white tracking-[0.4em] text-center font-bold text-sm"
-                                        />
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
-                                >
-                                    {loading ? <Loader2 className="animate-spin" size={18} /> : 'Verificar e Ingresar'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCodeSent(false)}
-                                    className="w-full text-center text-xs text-gray-500 hover:text-gray-300 block"
-                                >
-                                    Cambiar número telefónico
-                                </button>
-                            </form>
-                        )}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-} */
+*/
