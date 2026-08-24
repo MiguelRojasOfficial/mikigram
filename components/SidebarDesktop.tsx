@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageSquare, MapPin, PlusCircle, Film, User, ShieldCheck } from 'lucide-react';
+import IconWrapper, { IconName } from '@/components/IconWrapper';
 
 export default function SidebarDesktop() {
     const pathname = usePathname();
 
-    const navItems = [
-        { name: 'Chats', href: '/chats', icon: MessageSquare },
-        { name: 'Mapa', href: '/map', icon: MapPin },
-        { name: 'Crear Estado', href: '/create', icon: PlusCircle },
-        { name: 'Feed TikTok', href: '/feed', icon: Film },
-        { name: 'Perfil', href: '/profile', icon: User },
+    const navItems: { name: string; href: string; icon: IconName }[] = [
+        { name: 'Chats', href: '/chats', icon: 'chats' },
+        { name: 'Mapa', href: '/map', icon: 'map' },
+        { name: 'Crear Estado', href: '/create', icon: 'create' },
+        { name: 'Feed TikTok', href: '/feed', icon: 'feed' },
+        { name: 'Perfil', href: '/profile', icon: 'profile' },
     ];
 
     return (
@@ -29,7 +29,6 @@ export default function SidebarDesktop() {
 
                 <nav className="space-y-1.5">
                     {navItems.map((item) => {
-                        const Icon = item.icon;
                         const isActive = pathname === item.href;
 
                         return (
@@ -42,7 +41,7 @@ export default function SidebarDesktop() {
                                         : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                                 }`}
                             >
-                                <Icon size={20} />
+                                <IconWrapper name={item.icon} size={20} />
                                 <span>{item.name}</span>
                             </Link>
                         );
@@ -51,7 +50,7 @@ export default function SidebarDesktop() {
             </div>
 
             <div className="p-3 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-800 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <ShieldCheck size={16} className="text-green-500 flex-shrink-0" />
+                <IconWrapper name="shield" size={16} className="text-green-500 flex-shrink-0" />
                 <span>Mensajes cifrados E2EE</span>
             </div>
         </div>
