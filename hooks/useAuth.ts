@@ -6,7 +6,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export const useAuth = () => {
   const { user, setUser } = useChatStore();
-  const [loading, setLoading] = useState<boolean>(true); // <--- Estado de carga añadido
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
