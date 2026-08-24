@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useChatStore } from '@/store/useChatStore';
@@ -6,10 +6,12 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export const useAuth = () => {
   const { user, setUser } = useChatStore();
+  const [loading, setLoading] = useState<boolean>(true); // <--- Estado de carga añadido
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, [setUser]);
@@ -19,7 +21,6 @@ export const useAuth = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const loggedUser = result.user;
-
 
       if (loggedUser) {
         await setDoc(doc(db, "users", loggedUser.uid), {
@@ -38,5 +39,5 @@ export const useAuth = () => {
 
   const logout = () => signOut(auth);
 
-  return { user, loginWithGoogle, logout };
+  return { user, loading, loginWithGoogle, logout };
 };
