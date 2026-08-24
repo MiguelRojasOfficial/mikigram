@@ -5,7 +5,10 @@ import ProfileView from '@/components/ProfileView';
 import { Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
-    const { user, loading } = useAuth();
+    // Si tu hook usa 'isLoading' o si solo expone 'user'
+    const auth = useAuth() as any; 
+    const user = auth.user;
+    const loading = auth.loading ?? auth.isLoading ?? false;
 
     if (loading) {
         return (
