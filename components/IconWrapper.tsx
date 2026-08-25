@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react';
 import { 
     MessageSquare, 
     MapPin, 
@@ -19,6 +20,16 @@ interface IconWrapperProps extends LucideProps {
 }
 
 export default function IconWrapper({ name, size = 20, className = '', ...props }: IconWrapperProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return <span style={{ width: size, height: size, display: 'inline-block' }} className={className} />;
+    }
+
     switch (name) {
         case 'chats':
             return <MessageSquare size={size} className={className} {...props} />;
