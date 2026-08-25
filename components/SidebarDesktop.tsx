@@ -1,44 +1,41 @@
-'use client'
+'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import IconWrapper, { IconName } from '@/components/IconWrapper';
 
 export default function SidebarDesktop() {
-    const pathname = usePathname();
+  const pathname = usePathname();
 
-    const navItems: { name: string; href: string; icon: IconName }[] = [
-        { name: '', href: '/', icon: 'chats' },
-        { name: '', href: '/map', icon: 'map' },
-        { name: '', href: '/create', icon: 'create' },
-        { name: '', href: '/feed', icon: 'feed' },
-        { name: '', href: '/profile', icon: 'profile' },
-    ];
+  const navItems: { id: string; href: string; icon: IconName }[] = [
+    { id: 'chats', href: '/', icon: 'chats' },
+    { id: 'map', href: '/map', icon: 'map' },
+    { id: 'create', href: '/create', icon: 'create' },
+    { id: 'feed', href: '/feed', icon: 'feed' },
+    { id: 'profile', href: '/profile', icon: 'profile' },
+  ];
 
-    return (
-        <div className="flex flex-col h-full justify-between">
-            <div>
-                <nav className="space-y-1.5">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href;
+  return (
+    <aside className="w-16 h-full flex flex-col items-center py-4 bg-gray-900 text-gray-400 select-none">
+      <nav className="flex flex-col gap-3">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
 
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm transition-all ${
-                                    isActive
-                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                }`}
-                            >
-                                <IconWrapper name={item.icon} size={20} />
-                                <span>{item.name}</span>
-                            </Link>
-                        );
-                    })}
-                </nav>
-            </div>
-        </div>
-    );
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                isActive
+                  ? 'bg-white/20 text-white font-bold brightness-200 scale-105 shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <IconWrapper name={item.icon} size={22} />
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  );
 }
