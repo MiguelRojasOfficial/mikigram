@@ -8,11 +8,11 @@ export default function SidebarDesktop() {
     const pathname = usePathname();
 
     const navItems: { name: string; href: string; icon: IconName }[] = [
-        { name: 'Chats', href: '/', icon: 'chats' },
-        { name: 'Mapa', href: '/map', icon: 'map' },
-        { name: 'Crear Estado', href: '/create', icon: 'create' },
-        { name: 'Feed TikTok', href: '/feed', icon: 'feed' },
-        { name: 'Perfil', href: '/profile', icon: 'profile' },
+        { name: '', href: '/', icon: 'chats' },
+        { name: '', href: '/map', icon: 'map' },
+        { name: '', href: '/create', icon: 'create' },
+        { name: '', href: '/feed', icon: 'feed' },
+        { name: '', href: '/profile', icon: 'profile' },
     ];
 
     return (
