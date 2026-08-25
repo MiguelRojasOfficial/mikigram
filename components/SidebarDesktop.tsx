@@ -27,7 +27,7 @@ export default function SidebarDesktop() {
               href={item.href}
               className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-blue-600 text-white font-bold brightness-125 scale-105 shadow-md shadow-blue-500/20'
+                  ? 'bg-green-600 text-white font-bold brightness-125 scale-105 shadow-md shadow-green-500/20'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#202c35]'
               }`}
             >
