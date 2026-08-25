@@ -16,7 +16,7 @@ export default function SidebarDesktop() {
   ];
 
   return (
-    <aside className="w-16 h-full flex flex-col items-center py-4 bg-gray-900 text-gray-400 select-none">
+    <aside className="w-16 h-full flex flex-col items-center py-4 bg-white dark:bg-[#111b20] border-r border-gray-200 dark:border-gray-800 select-none">
       <nav className="flex flex-col gap-3">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -25,10 +25,10 @@ export default function SidebarDesktop() {
             <Link
               key={item.id}
               href={item.href}
-              className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 ${
+              className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-white/20 text-white font-bold brightness-200 scale-105 shadow-sm'
-                  : 'text-gray-400 hover:text-white hover:bg-white/10'
+                  ? 'bg-blue-600 text-white font-bold brightness-125 scale-105 shadow-md shadow-blue-500/20'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#202c35]'
               }`}
             >
               <IconWrapper name={item.icon} size={22} />
