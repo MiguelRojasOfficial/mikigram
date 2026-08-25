@@ -79,7 +79,6 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
                 </div>
             )}
 
-            {/* Pestañas de Contenido (Tabs) */}
             <div className="mt-6 border-t border-gray-200 dark:border-gray-800">
                 <div className="flex justify-around border-b border-gray-200 dark:border-gray-800">
                     <button 

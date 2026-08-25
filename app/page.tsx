@@ -1,8 +1,9 @@
 'use client';
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigation } from '@/hooks/useNavigation';
-import { useChatsList } from '@/hooks/useChatsList'
+import { useChatsList } from '@/hooks/useChatsList';
 import { useChatStore } from '@/store/useChatStore';
 import Login from '@/components/Login';
 import ChatWindow from '@/components/ChatWindow';
@@ -24,7 +25,7 @@ export default function Home() {
     e.preventDefault();
     e.stopPropagation();
     if (searchEmail.trim() !== '') {
-    searchUser(searchEmail.trim());
+      searchUser(searchEmail.trim());
     }
   };
 
@@ -34,29 +35,30 @@ export default function Home() {
   };
 
   return (
-    <main className="flex h-screen w-full bg-[#f0f2f5] dark:bg-[#111b20] overflow-hidden">
+    <div className="flex h-full w-full bg-[#f0f2f5] dark:bg-[#111b20] overflow-hidden">
       <aside 
         className={`${
           selectedChat ? 'hidden md:flex' : 'flex'
-        } w-full md:max-w-[400px] border-r border-gray-300 dark:border-gray-700 bg-white dark:bg-[#111b20] flex-col flex-shrink-0 h-full`}>
-          <header className="h-[60px] p-4 flex justify-between items-center bg-[#f0f2f5] dark:bg-[#202c35]">
-            <div className="flex items-center gap-3">
-              <img 
-                src={user.photoURL || ""} 
-                alt="Profile" 
-                className="w-10 h-10 rounded-full border"
-              />
-              <span className="text-xs font-bold dark:text-white">
-                {user.displayName?.split(' ')[0]}
-              </span>
-            </div>
-            <div className="flex gap-4 text-gray-500">
-              <button onClick={logout} title="Cerrar sesión">
-                <LogOut size={20} className="hover:text-red-500 transition-colors" />
-              </button>
-              <MoreVertical size={20} />
-            </div>
-          </header>
+        } w-full md:max-w-[360px] border-r border-gray-300 dark:border-gray-800 bg-white dark:bg-[#111b20] flex-col flex-shrink-0 h-full`}
+      >
+        <header className="h-[60px] p-4 flex justify-between items-center bg-[#f0f2f5] dark:bg-[#202c35]">
+          <div className="flex items-center gap-3">
+            <img 
+              src={user.photoURL || ""} 
+              alt="Profile" 
+              className="w-10 h-10 rounded-full border"
+            />
+            <span className="text-xs font-bold dark:text-white">
+              {user.displayName?.split(' ')[0]}
+            </span>
+          </div>
+          <div className="flex gap-4 text-gray-500">
+            <button onClick={logout} title="Cerrar sesión">
+              <LogOut size={20} className="hover:text-red-500 transition-colors" />
+            </button>
+            <MoreVertical size={20} />
+          </div>
+        </header>
 
         <form onSubmit={handleSearchSubmit} className="p-2 px-4">
           <div className="bg-gray-100 dark:bg-[#202c35] flex items-center px-3 py-1.5 rounded-lg">
@@ -69,7 +71,7 @@ export default function Home() {
                   searchUser('');
                 } 
               }}
-              placeholder="Buscar usuario por correo exacto ...."
+              placeholder="Buscar usuario por correo exacto..."
               className="bg-transparent border-none outline-none px-3 w-full text-sm text-gray-800 dark:text-white"
             />
             <div className="flex items-center gap-1.5 min-w-[20px] justify-end">
@@ -108,15 +110,15 @@ export default function Home() {
                     </div>
                   </div>
                 ))
-                ) : (
-                  !searchLoading && <p className="text-xs text-gray-400 text-center py-4">No se encontraron usuarios.</p>
-                )}
-              </div>
+              ) : (
+                !searchLoading && <p className="text-xs text-gray-400 text-center py-4">No se encontraron usuarios.</p>
+              )}
+            </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-800/60">
               {chatsLoading ? (
                 <div className="flex justify-center items-center py-10 text-gray-400 gap-2 text-sm">
-                  <Loader2 size={20} className="animate-spin" /> Cargando conversaciones.....
+                  <Loader2 size={20} className="animate-spin" /> Cargando conversaciones...
                 </div>
               ) : chats.length > 0 ? (
                 chats.map((chat) => {
@@ -142,7 +144,7 @@ export default function Home() {
                             {chat.recipient?.displayName || "Usuario de Mikigram"}    
                           </h3>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 with-emoji-support">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                           {chat.lastMessage || "Haga clic aquí para enviar su primer mensaje"}
                         </p>
                       </div>
@@ -153,7 +155,7 @@ export default function Home() {
                 <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400 mt-10">
                   <MessageCircle size={40} className="mb-3 opacity-20" />
                   <p className="text-xs italic font-light max-w-[200px]">
-                    La bandeja de entrada esta vacía. Escribe un correo electrónico arriba para empezar.
+                    La bandeja de entrada está vacía. Escribe un correo electrónico arriba para empezar.
                   </p>
                 </div>
               )}
@@ -161,9 +163,10 @@ export default function Home() {
           )}
         </div>
       </aside>
+
       <div className={`${selectedChat ? 'flex' : 'hidden md:flex'} flex-1 h-full min-w-0`}>
         <ChatWindow />
-      </div>     
-    </main>
+      </div>    
+    </div>
   );
 }

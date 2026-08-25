@@ -8,7 +8,7 @@ export default function SidebarDesktop() {
     const pathname = usePathname();
 
     const navItems: { name: string; href: string; icon: IconName }[] = [
-        { name: 'Chats', href: '/chats', icon: 'chats' },
+        { name: 'Chats', href: '/', icon: 'chats' },
         { name: 'Mapa', href: '/map', icon: 'map' },
         { name: 'Crear Estado', href: '/create', icon: 'create' },
         { name: 'Feed TikTok', href: '/feed', icon: 'feed' },

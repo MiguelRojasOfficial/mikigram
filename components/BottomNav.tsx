@@ -8,7 +8,7 @@ export default function BottomNav() {
     const pathname = usePathname();
 
     const navItems: { name: string; href: string; icon: IconName; isPrimary?: boolean }[] = [
-        { name: 'Chats', href: '/chats', icon: 'chats' },
+        { name: 'Chats', href: '/', icon: 'chats' },
         { name: 'Mapa', href: '/map', icon: 'map' },
         { name: 'Crear', href: '/create', icon: 'create', isPrimary: true },
         { name: 'Feed', href: '/feed', icon: 'feed' },
