@@ -39,11 +39,6 @@ export default function SidebarDesktop() {
                     })}
                 </nav>
             </div>
-
-            <div className="p-3 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-800 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <IconWrapper name="shield" size={16} className="text-green-500 flex-shrink-0" />
-                <span>Mensajes cifrados E2EE</span>
-            </div>
         </div>
     );
 }
