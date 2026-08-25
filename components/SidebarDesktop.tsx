@@ -18,15 +18,6 @@ export default function SidebarDesktop() {
     return (
         <div className="flex flex-col h-full justify-between">
             <div>
-                <div className="flex items-center gap-3 px-3 py-4 mb-6">
-                    <div className="h-10 w-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-md">
-                        M
-                    </div>
-                    <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-violet-500 bg-clip-text text-transparent">
-                        Mikigram
-                    </span>
-                </div>
-
                 <nav className="space-y-1.5">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
