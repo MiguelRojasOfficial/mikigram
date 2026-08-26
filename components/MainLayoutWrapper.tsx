@@ -11,7 +11,7 @@ export default function MainLayoutWrapper({ children }: { children: React.ReactN
     if (loading) {
         return (
             <div className="min-h-screen w-full flex items-center justify-center bg-[#f0f2f5] dark:bg-[#111b20]">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-green-500" />
             </div>
         );
     }

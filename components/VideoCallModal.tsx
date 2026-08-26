@@ -199,7 +199,7 @@ export default function VideoCallModal({
                         <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
                     ) : (
                         <div className="text-center text-gray-400 flex flex-col items-center gap-3">
-                            <Loader2 className="animate-spin text-blue-500" size={32} />
+                            <Loader2 className="animate-spin text-green-500" size={32} />
                             <p className="text-sm font-medium">{callStatus}</p>
                             <p className="text-xs text-gray-600">{recipientName}</p>
                         </div>

@@ -27,13 +27,13 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
                     <img 
                         src={user.photoURL} 
                         alt={user.displayName} 
-                        className="w-24 h-24 rounded-full object-cover border-4 border-blue-500/20 shadow-md"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-green-500/20 shadow-md"
                     />
                     {isOwnProfile && (
                         <button 
                             onClick={() => setShowVisitors(!showVisitors)}
                             title="Ver quién visitó tu perfil"
-                            className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow border-2 border-white dark:border-[#111b20] transition active:scale-95"
+                            className="absolute bottom-0 right-0 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow border-2 border-white dark:border-[#111b20] transition active:scale-95"
                         >
                             <Eye size={14} />
                         </button>
@@ -69,8 +69,8 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
             </div>
 
             {showVisitors && (
-                <div className="mx-4 my-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs">
-                    <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">Visitas recientes a tu perfil:</p>
+                <div className="mx-4 my-4 p-4 rounded-xl bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-xs">
+                    <p className="font-semibold text-green-800 dark:text-green-300 mb-1">Visitas recientes a tu perfil:</p>
                     <p className="text-gray-600 dark:text-gray-400">
                         {user.profileViews && user.profileViews.length > 0 
                             ? `${user.profileViews.length} personas han visto tu perfil recientemente.` 
@@ -84,7 +84,7 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
                     <button 
                         onClick={() => setActiveTab('posts')}
                         className={`flex-1 py-3 flex justify-center border-b-2 transition ${
-                            activeTab === 'posts' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'
+                            activeTab === 'posts' ? 'border-green-500 text-green-500' : 'border-transparent text-gray-400'
                         }`}
                     >
                         <Grid size={20} />
@@ -92,7 +92,7 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
                     <button 
                         onClick={() => setActiveTab('likes')}
                         className={`flex-1 py-3 flex justify-center border-b-2 transition ${
-                            activeTab === 'likes' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'
+                            activeTab === 'likes' ? 'border-green-500 text-green-500' : 'border-transparent text-gray-400'
                         }`}
                     >
                         <Heart size={20} />
@@ -100,7 +100,7 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
                     <button 
                         onClick={() => setActiveTab('private')}
                         className={`flex-1 py-3 flex justify-center border-b-2 transition ${
-                            activeTab === 'private' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400'
+                            activeTab === 'private' ? 'border-green-500 text-green-500' : 'border-transparent text-gray-400'
                         }`}
                     >
                         <Lock size={20} />

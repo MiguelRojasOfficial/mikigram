@@ -136,7 +136,7 @@ export default function Login() {
                     </button>
                 )}
                 
-                <div className="h-20 w-20 bg-blue-500 rounded-3xl flex items-center justify-center shadow-lg mb-6 rotate-3 flex-shrink-0">
+                <div className="h-20 w-20 bg-green-500 rounded-3xl flex items-center justify-center shadow-lg mb-6 rotate-3 flex-shrink-0">
                     <MessageSquare className="h-10 w-10 -rotate-3 text-white" />
                 </div>
 
@@ -164,13 +164,13 @@ export default function Login() {
                                     onChange={(e) => setPhoneNumber(e.target.value)}
                                     placeholder="+51 999 888 777"
                                     disabled={loading}
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none transition"
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={loading || !phoneNumber}
-                                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
+                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
                             >
                                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Recibir código SMS'}
                             </button>

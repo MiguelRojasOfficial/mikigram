@@ -209,7 +209,7 @@ export default function ChatWindow() {
     return (
       <section className="flex-1 bg-[#efeae2] dark:bg-[#0b141a] flex items-center justify-center">
         <div className="text-center p-10 bg-white/50 dark:bg-[#202e35]/50 backdrop-blur-md rounded-3xl border border-white/20 shadow-xl max-w-sm">
-          <div className="h-10 w-10 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="h-10 w-10 bg-green-500/10 text-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Shield size={24} />
           </div>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Mikigram web</h2>
@@ -236,7 +236,7 @@ export default function ChatWindow() {
           {activeRecipient?.photoURL ? (
             <img src={activeRecipient.photoURL} alt="" className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-600" />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-green-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
               {fallbackLetter}
             </div>
           )}
@@ -244,7 +244,7 @@ export default function ChatWindow() {
           <div className="min-w-0">
             <h2 className="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate">{activeRecipient?.displayName}</h2>
             {isRecipientTyping ? (
-              <p className="text-[11px] text-blue-500 font-medium animate-pulse tracking-wide">escribiendo.....</p>
+              <p className="text-[11px] text-green-500 font-medium animate-pulse tracking-wide">escribiendo.....</p>
             ) : (
               <p className="text-[11px] text-gray-400 truncate">{activeRecipient?.email}</p>
             )}
@@ -300,7 +300,7 @@ export default function ChatWindow() {
                   href={msg.fileURL}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors text-blue-600 dark:text-blue-400 font-medium text-xs mb-1"
+                  className="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors text-green-600 dark:text-green-400 font-medium text-xs mb-1"
                 >
                   <FileText size={24} className="text-gray-500 dark:text-gray-400" />
                   <span className="truncate max-w-[140px] md:max-w-[180px] text-gray-800 dark:text-gray-200">{msg.text || 'Descargar archivo'}</span>
@@ -324,7 +324,7 @@ export default function ChatWindow() {
                 {isMe && (
                   <div>
                     {msg.read ? (
-                      <span className="text-blue-500 font-bold text-xs leading-none" title="Leído">✓✓</span>
+                      <span className="text-green-500 font-bold text-xs leading-none" title="Leído">✓✓</span>
                     ) : (
                       <span className="text-gray-400 font-bold text-xs leading-none" title="Enviado">✓</span>
                     )}
@@ -347,7 +347,7 @@ export default function ChatWindow() {
             onClick={startEditMode}
             className="w-full px-4 py-2 text-left text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#182229] flex items-center gap-2 transition-colors"
           >
-            <Pencil size={14} className="text-blue-500" />
+            <Pencil size={14} className="text-green-500" />
             Editar mensaje
           </button>
           <hr className="border-gray-200 dark:border-gray-700 my-1" />
@@ -366,13 +366,13 @@ export default function ChatWindow() {
 
       {uploadProgress !== null && (
         <div className="absolute bottom-16 md:bottom-4 right-4 bg-white dark:bg-[#202c35] p-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex items-center gap-3 animate-bounce z-20 text-xs font-medium text-gray-700 dark:text-gray-300">
-          <Loader2 size={16} className="animate-spin text-blue-500" />
+          <Loader2 size={16} className="animate-spin text-green-500" />
           <span>Subiendo multimedia: {uploadProgress}%</span>
         </div>
       )}
 
       {editingMessage && (
-        <div className="px-4 md:px-6 py-2 bg-blue-50 dark:bg-[#18252d] border-l border-gray-300 dark:border-gray-700 flex items-center justify-between animate-in slide-in-from-bottom-2 text-xs font-medium text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/30">
+        <div className="px-4 md:px-6 py-2 bg-green-50 dark:bg-[#18252d] border-l border-gray-300 dark:border-gray-700 flex items-center justify-between animate-in slide-in-from-bottom-2 text-xs font-medium text-green-600 dark:text-green-400 border-b border-green-100 dark:border-green-900/30">
           <div className="flex items-center gap-2 truncate">
             <Pencil size={14} />
             <span className="truncate">Editando mensaje: <span className="italic text-gray-500 dark:text-gray-400">"{editingMessage.text}"</span></span>
@@ -388,7 +388,7 @@ export default function ChatWindow() {
           <div className="bg-[#202c35] border border-gray-700 rounded-2xl overflow-hidden max-w-md w-full shadow-2xl relative flex flex-col">
             <header className="p-4 flex items-center justify-between border-b border-gray-700 bg-[#111b20]">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Camera size={16} className="text-blue-400" /> Cámara Mikigram
+                <Camera size={16} className="text-green-400" /> Cámara Mikigram
               </h3>
               <button onClick= {stopCamera} className="text-gray-400 hover:text-white transition-colors">
                 <X size={16} />
@@ -404,7 +404,7 @@ export default function ChatWindow() {
               />
               {!cameraStream && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 text-xs">
-                  <Loader2 size={24} className="animate-spin text-blue-500"/>
+                  <Loader2 size={24} className="animate-spin text-green-500"/>
                   Iniciando lente de la cámara .....
                 </div>
               )}
@@ -420,7 +420,7 @@ export default function ChatWindow() {
               <button
                 onClick={capturePhoto}
                 disabled={!cameraStream}
-                className="px-5 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-40 text-white rounded-lg text-xs font-semibold shadow-md active:scale-95 transition-all"
+                className="px-5 py-2 bg-green-500 hover:bg-green-600 disabled:opacity-40 text-white rounded-lg text-xs font-semibold shadow-md active:scale-95 transition-all"
               >
                 Tomar Foto
               </button>
@@ -465,7 +465,7 @@ export default function ChatWindow() {
         <div className="flex gap-2 md:gap-4 text-gray-500 dark:text-gray-400 flex-shrink-0">
           <Smile 
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className={`cursor-pointer transition-colors ${showEmojiPicker ? 'text-blue-500 dark:text-blue-400' : 'hover:text-gray-700 dark:hover:text-gray-200'}`}
+            className={`cursor-pointer transition-colors ${showEmojiPicker ? 'text-green-500 dark:text-green-400' : 'hover:text-gray-700 dark:hover:text-gray-200'}`}
             size={20} 
           />
           <Camera
@@ -491,7 +491,7 @@ export default function ChatWindow() {
             type="submit"
             disabled={!text.trim()}
             className={`${
-              editingMessage ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-blue-500 hover:bg-blue-600'
+              editingMessage ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-green-500 hover:bg-green-600'
             } disabled:opacity-40 text-white p-2 md:p-2.5 rounded-lg transition-all shadow-md active:scale-95 flex-shrink-0`}
           >
             <Send size={20} />

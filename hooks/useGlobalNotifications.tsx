@@ -77,12 +77,12 @@ export const useGlobalNotifications = () => {
                                         className="h-10 w-10 rounded-full object-cover border border-gray-200 dark.border-gfray-600 flex-shrink-0"
                                     />
                                 ) : (
-                                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner flex-shrink-0">
+                                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-green-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-inner flex-shrink-0">
                                         {senderName.charAt(0).toUpperCase()}
                                     </div>
                             )}
                                 <div className="flex-1 w-0">
-                                    <p className="text-xs font-bold text-blue-500 dark:text-blue-400">
+                                    <p className="text-xs font-bold text-green-500 dark:text-green-400">
                                         {senderName}
                                     </p>
 
@@ -99,7 +99,7 @@ export const useGlobalNotifications = () => {
                                                 )}
                                             </div>    
                                         ) :  newMsg.type === 'file' ? (
-                                          <span className="text-blue-600 dark:text-blue-400">Archivo: {newMsg.text}</span>
+                                          <span className="text-green-600 dark:text-green-400">Archivo: {newMsg.text}</span>
                                         ) : (
                                           <p className="text-gray-600 dark:text-gray-300 truncate">{newMsg.text}</p>
                                         )}
