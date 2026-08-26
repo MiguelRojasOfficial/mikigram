@@ -8,7 +8,7 @@ export default function ChatsPage() {
             <div className="w-full md:w-80 lg:w-96 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
                     <h1 className="text-xl font-bold dark:text-white">Chats</h1>
-                    <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-blue-500">
+                    <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-green-500">
                         <MessageSquarePlus size={20} />
                     </button>
                 </div>

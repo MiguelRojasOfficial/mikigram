@@ -24,7 +24,7 @@ export default function BottomNav() {
                     if (item.isPrimary) {
                         return (
                             <Link key={item.name} href={item.href} className="relative -top-3">
-                                <div className="bg-blue-600 text-white p-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex items-center justify-center">
+                                <div className="bg-green-600 text-white p-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex items-center justify-center">
                                     <IconWrapper name={item.icon} size={24} />
                                 </div>
                             </Link>
@@ -37,7 +37,7 @@ export default function BottomNav() {
                             href={item.href}
                             className={`flex flex-col items-center gap-1 transition-colors px-2 py-1 ${
                                 isActive 
-                                    ? 'text-blue-600 dark:text-blue-400 font-semibold' 
+                                    ? 'text-green-600 dark:text-green-400 font-semibold' 
                                     : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
                             }`}
                         >

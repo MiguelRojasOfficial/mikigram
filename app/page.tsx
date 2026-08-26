@@ -91,9 +91,9 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto border-t border-gray-100 dark:border-gray-800">
           {searchEmail.trim() !== '' ? (
-            <div className="bg-blue-50/50 dark:bg-blue-950/5 p-2 animate-in fade-in duration-200">
+            <div className="bg-green-50/50 dark:bg-green-950/5 p-2 animate-in fade-in duration-200">
               <div className="flex justify-between items-center px-2 mb-2">
-                <p className="text-xs font-semibold text-blue-500">Resultados encontrados:</p>
+                <p className="text-xs font-semibold text-green-500">Resultados encontrados:</p>
                 <button type="button" onClick={handleClearSearch} className="text-[11px] text-gray-400 hover:underline">Volver</button>
               </div>
               {searchResults && searchResults.length > 0 ? (

@@ -8,7 +8,7 @@ export default function CreatePage() {
             <h2 className="text-xl font-bold dark:text-white mb-6">Crear Nuevo Estado</h2>
             
             <div className="flex gap-4">
-                <button className="flex flex-col items-center gap-2 p-6 rounded-2xl bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition active:scale-95">
+                <button className="flex flex-col items-center gap-2 p-6 rounded-2xl bg-green-600 text-white font-semibold shadow-lg hover:bg-green-700 transition active:scale-95">
                     <Camera size={28} />
                     <span className="text-sm">Tomar Foto / Video</span>
                 </button>

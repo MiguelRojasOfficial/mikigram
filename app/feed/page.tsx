@@ -14,14 +14,14 @@ export default function FeedPage() {
                         <img 
                             src="https://api.dicebear.com/7.x/adventurer/svg?seed=mikigram_demo" 
                             alt="Foto" 
-                            className="w-10 h-10 rounded-full border-2 border-blue-500"
+                            className="w-10 h-10 rounded-full border-2 border-green-500"
                         />
                         <div>
                             <p className="text-white font-bold text-sm">@amigo_demo</p>
                             <p className="text-gray-400 text-xs">Hace 10 min</p>
                         </div>
                     </div>
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
                         <PlusCircle size={14} /> Seguir
                     </button>
                 </div>

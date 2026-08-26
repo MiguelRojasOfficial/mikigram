@@ -10,7 +10,7 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <div className="h-full w-full flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-green-500" />
             </div>
         );
     }
