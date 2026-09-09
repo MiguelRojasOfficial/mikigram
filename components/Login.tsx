@@ -15,11 +15,16 @@ export default function Login() {
     const [isCodeSent, setIsCodeSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    
+    // El QR aparece activado por defecto (true)
     const [showQR, setShowQR] = useState(true);
+
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
     const { loginWithGoogle } = useAuth();
     const router = useRouter();
+
+    // Token temporal para mostrar en el QR
     const qrSessionToken = "mikigram-auth-session-xyz123";
 
     useEffect(() => {
@@ -160,6 +165,7 @@ export default function Login() {
                     </div>
                 )}
 
+                {/* MODO QR PRIMERO (POR DEFECTO) */}
                 {showQR ? (
                     <div className="w-full flex flex-col items-center gap-4 mb-6">
                         <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-inner">
@@ -170,6 +176,7 @@ export default function Login() {
                         </p>
                     </div>
                 ) : (
+                    /* FORMULARIO SECUNDARIO */
                     <div className="w-full mb-6 space-y-4">
                         {!isCodeSent ? (
                             <form onSubmit={handleSendCode} className="space-y-3">
@@ -218,6 +225,7 @@ export default function Login() {
                     </div>
                 )}
 
+                {/* BOTÓN PARA ALTERNAR CON ÍCONO DINÁMICO */}
                 {!isCodeSent && (
                     <button
                         type="button"
@@ -227,8 +235,17 @@ export default function Login() {
                         }}
                         className="w-full mb-4 flex items-center justify-center gap-2 text-xs font-semibold text-green-600 hover:text-green-500 transition"
                     >
-                        <QrCode size={16} />
-                        {showQR ? 'Ingresar con número celular' : 'Ingresar con Código QR'}
+                        {showQR ? (
+                            <>
+                                <Phone size={16} />
+                                Ingresar con número celular
+                            </>
+                        ) : (
+                            <>
+                                <QrCode size={16} />
+                                Ingresar con Código QR
+                            </>
+                        )}
                     </button>
                 )}
 
