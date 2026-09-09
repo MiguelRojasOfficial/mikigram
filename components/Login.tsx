@@ -16,8 +16,8 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     
-    // Estado para alternar la vista entre Formulario y Código QR
-    const [showQR, setShowQR] = useState(false);
+    // El QR aparece activado por defecto (true)
+    const [showQR, setShowQR] = useState(true);
 
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
@@ -165,7 +165,7 @@ export default function Login() {
                     </div>
                 )}
 
-                {/* --- MODO QR --- */}
+                {/* --- MODO QR PRIMERO (POR DEFECTO) --- */}
                 {showQR ? (
                     <div className="w-full flex flex-col items-center gap-4 mb-6">
                         <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-inner">
@@ -176,7 +176,7 @@ export default function Login() {
                         </p>
                     </div>
                 ) : (
-                    /* --- TU FORMULARIO ORIGINAL --- */
+                    /* --- FORMULARIO SECUNDARIO --- */
                     <div className="w-full mb-6 space-y-4">
                         {!isCodeSent ? (
                             <form onSubmit={handleSendCode} className="space-y-3">
@@ -225,7 +225,7 @@ export default function Login() {
                     </div>
                 )}
 
-                {/* --- BOTÓN PARA MOSTRAR / OCULTAR EL QR --- */}
+                {/* BOTÓN PARA ALTERNAR ENTRE VISTAS */}
                 {!isCodeSent && (
                     <button
                         type="button"
