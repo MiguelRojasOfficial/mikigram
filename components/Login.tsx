@@ -9,17 +9,22 @@ import { MessageSquare, ShieldCheck, Phone, Lock, Loader2, ArrowLeft, QrCode } f
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+
 export default function Login() {
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState<string | undefined>('');
     const [verificationCode, setVerificationCode] = useState('');
     const [isCodeSent, setIsCodeSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showQR, setShowQR] = useState(true);
+
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
     const { loginWithGoogle } = useAuth();
     const router = useRouter();
+
     const qrSessionToken = "mikigram-auth-session-xyz123";
 
     useEffect(() => {
@@ -49,9 +54,9 @@ export default function Login() {
         if (e) e.preventDefault();
         setError('');
         setLoading(true);
-      
-        if (!phoneNumber.startsWith('+') || phoneNumber.length < 10) {
-            setError('Ingresa el número con formato internacional (ej: +51999...)');
+
+        if (!phoneNumber || phoneNumber.length < 8) {
+            setError('Ingresa un número de celular válido.');
             setLoading(false);
             return;
         }
@@ -127,6 +132,47 @@ export default function Login() {
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-[#f0f2f5] dark:bg-[#111b20] p-4 relative">
             
+            <style jsx global>{`
+                .PhoneInput {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    width: 100%;
+                }
+                .PhoneInputCountry {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    background: rgba(243, 244, 246, 1);
+                    padding: 12px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(209, 213, 219, 1);
+                }
+                .dark .PhoneInputCountry {
+                    background: #1a0724;
+                    border-color: rgba(75, 85, 99, 1);
+                }
+                .PhoneInputCountrySelect {
+                    background: transparent;
+                    border: none;
+                    color: inherit;
+                    cursor: pointer;
+                }
+                .PhoneInputInput {
+                    width: 100%;
+                    padding: 14px 16px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(209, 213, 219, 1);
+                    background-color: rgba(249, 250, 251, 1);
+                    outline: none;
+                }
+                .dark .PhoneInputInput {
+                    background-color: #1a0724;
+                    border-color: rgba(75, 85, 99, 1);
+                    color: white;
+                }
+            `}</style>
+
             <div id="recaptcha-container"></div>
 
             <div className="bg-white dark:bg-[#280e35] p-8 rounded-2xl shadow-2xl w-full max-w-md flex flex-col items-center border border-gray-200 dark:border-gray-700 transition-all duration-300">
@@ -173,15 +219,13 @@ export default function Login() {
                     <div className="w-full mb-6 space-y-4">
                         {!isCodeSent ? (
                             <form onSubmit={handleSendCode} className="space-y-3">
-                                <div className="relative">
-                                    <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input 
-                                        type="tel"
+                                <div className="w-full">
+                                    <PhoneInput
+                                        defaultCountry="PE"
+                                        placeholder="Número de celular"
                                         value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        placeholder="+51 999 888 777"
+                                        onChange={setPhoneNumber}
                                         disabled={loading}
-                                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
                                     />
                                 </div>
                                 <button
