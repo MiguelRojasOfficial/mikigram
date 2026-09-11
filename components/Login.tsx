@@ -136,40 +136,95 @@ export default function Login() {
                 .PhoneInput {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 10px;
                     width: 100%;
                 }
+
                 .PhoneInputCountry {
+                    position: relative;
                     display: flex;
                     align-items: center;
-                    gap: 4px;
-                    background: rgba(243, 244, 246, 1);
-                    padding: 12px;
+                    gap: 6px;
+                    background-color: #f9fafb;
+                    padding: 12px 14px;
                     border-radius: 12px;
-                    border: 1px solid rgba(209, 213, 219, 1);
+                    border: 1px solid #d1d5db;
                 }
+
                 .dark .PhoneInputCountry {
-                    background: #1a0724;
-                    border-color: rgba(75, 85, 99, 1);
+                    background-color: #1a0724;
+                    border-color: #4b5563;
                 }
+
                 .PhoneInputCountrySelect {
-                    background: transparent;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    height: 100%;
+                    width: 100%;
+                    z-index: 1;
                     border: none;
-                    color: inherit;
+                    opacity: 0;
                     cursor: pointer;
                 }
+
+                .PhoneInputCountrySelect option {
+                    background-color: #ffffff;
+                    color: #111827;
+                }
+
+                .dark .PhoneInputCountrySelect option {
+                    background-color: #1a0724;
+                    color: #ffffff;
+                }
+
+                .PhoneInputCountryIcon {
+                    width: 24px;
+                    height: 18px;
+                    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+                }
+
+                .PhoneInputCountrySelectArrow {
+                    display: block;
+                    width: 8px;
+                    height: 8px;
+                    margin-left: 2px;
+                    border-style: solid;
+                    border-color: #374151;
+                    border-width: 0 2px 2px 0;
+                    transform: rotate(45deg);
+                    opacity: 1 !important;
+                }
+
+                .dark .PhoneInputCountrySelectArrow {
+                    border-color: #f3f4f6;
+                }
+
                 .PhoneInputInput {
                     width: 100%;
                     padding: 14px 16px;
                     border-radius: 12px;
-                    border: 1px solid rgba(209, 213, 219, 1);
-                    background-color: rgba(249, 250, 251, 1);
+                    border: 1px solid #d1d5db;
+                    background-color: #f9fafb;
+                    color: #111827 !important;
+                    font-size: 15px;
+                    font-weight: 500;
                     outline: none;
                 }
+
+                .PhoneInputInput::placeholder {
+                    color: #9ca3af;
+                }
+
                 .dark .PhoneInputInput {
                     background-color: #1a0724;
-                    border-color: rgba(75, 85, 99, 1);
-                    color: white;
+                    border-color: #4b5563;
+                    color: #ffffff !important;
+                }
+
+                .PhoneInputInput:focus {
+                    border-color: #4ade80;
+                    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
                 }
             `}</style>
 
