@@ -8,7 +8,6 @@ import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection } from 'fi
 import { MessageSquare, ShieldCheck, Phone, Lock, Loader2, ArrowLeft, QrCode } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
-
 import PhoneInput, { getCountryCallingCode } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
@@ -57,7 +56,6 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showQR, setShowQR] = useState(true);
-    const [isMobileScreen, setIsMobileScreen] = useState(false);
     const [qrSessionId, setQrSessionId] = useState<string | null>(null);
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
@@ -65,25 +63,12 @@ export default function Login() {
     const router = useRouter();
 
     useEffect(() => {
-        const handleResize = () => {
-            const isMobile = window.innerWidth < 640; // 'sm' breakpoint
-            setIsMobileScreen(isMobile);
-            if (isMobile) {
-                setShowQR(false); // En teléfonos pasa directo a número de celular
-            }
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    useEffect(() => {
-        if (!showQR || isMobileScreen) return;
+        if (!showQR) return;
 
         const sessionDocRef = doc(collection(db, 'qr_sessions'));
         const newSessionId = sessionDocRef.id;
         setQrSessionId(newSessionId);
+
         setDoc(sessionDocRef, {
             status: 'pending',
             createdAt: serverTimestamp(),
@@ -112,7 +97,7 @@ export default function Login() {
         return () => {
             unsubscribe();
         };
-    }, [showQR, isMobileScreen, router]);
+    }, [showQR, router]);
 
     useEffect(() => {
         if (!recaptchaVerifierRef.current && auth) {
@@ -273,13 +258,25 @@ export default function Login() {
                     <MessageSquare className="h-10 w-10 -rotate-3 text-white" />
                 </div>
 
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                    {showQR ? 'Escanear QR' : (isCodeSent ? 'Verifica tu número' : 'Entrar a Mikigram')}
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center">
+                    {/* En PC muestra 'Escanear QR' si showQR es true, en móvil siempre muestra 'Entrar a Mikigram' o SMS */}
+                    <span className="hidden sm:inline">
+                        {showQR ? 'Escanear QR' : (isCodeSent ? 'Verifica tu número' : 'Entrar a Mikigram')}
+                    </span>
+                    <span className="inline sm:hidden">
+                        {isCodeSent ? 'Verifica tu número' : 'Entrar a Mikigram'}
+                    </span>
                 </h1>
+
                 <p className="text-gray-500 dark:text-gray-400 text-center mb-6 text-sm px-4">
-                    {showQR 
-                        ? 'Escanea este código desde la app o versión web móvil para iniciar sesión.' 
-                        : (isCodeSent ? `Ingrese el código enviado a ${phoneNumber}` : 'Contactate con tu celular o cuenta de Google.')}
+                    <span className="hidden sm:inline">
+                        {showQR 
+                            ? 'Escanea este código desde la app o versión web móvil para iniciar sesión.' 
+                            : (isCodeSent ? `Ingrese el código enviado a ${phoneNumber}` : 'Ingresa con tu celular o cuenta de Google.')}
+                    </span>
+                    <span className="inline sm:hidden">
+                        {isCodeSent ? `Ingrese el código enviado a ${phoneNumber}` : 'Ingresa con tu celular o cuenta de Google.'}
+                    </span>
                 </p>
 
                 {error && (
@@ -288,8 +285,8 @@ export default function Login() {
                     </div>
                 )}
 
-                {showQR ? (
-                    <div className="w-full flex flex-col items-center gap-4 mb-6">
+                {showQR && (
+                    <div className="hidden sm:flex w-full flex-col items-center gap-4 mb-6">
                         <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-inner">
                             {qrSessionId ? (
                                 <QRCodeSVG value={qrSessionId} size={180} />
@@ -303,62 +300,62 @@ export default function Login() {
                             Abre Mikigram en tu celular &gt; Dispositivos vinculados
                         </p>
                     </div>
-                ) : (
-                    <div className="w-full mb-6 space-y-4">
-                        {!isCodeSent ? (
-                            <form onSubmit={handleSendCode} className="space-y-3">
-                                <div className="w-full">
-                                    <PhoneInput
-                                        defaultCountry="PE"
-                                        placeholder="Número de celular"
-                                        value={phoneNumber}
-                                        onChange={setPhoneNumber}
-                                        disabled={loading}
-                                        countrySelectComponent={CustomCountrySelect}
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={loading || !phoneNumber}
-                                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
-                                >
-                                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Recibir código SMS'}
-                                </button>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleVerifyCode} className="space-y-3">
-                                <div className="relative">
-                                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={verificationCode}
-                                        onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                                        placeholder="Código de 6 dígitos"
-                                        maxLength={6}
-                                        disabled={loading}
-                                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white text-center tracking-[0.5em] font-bold text-lg focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={loading || verificationCode.length !== 6}
-                                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
-                                >
-                                    {loading ? <Loader2 className="h-5 w-5 animate-spin"/> : 'Verificar e ingresar'}
-                                </button>
-                            </form>
-                        )}
-                    </div>
                 )}
 
-                {!isCodeSent && !isMobileScreen && (
+                <div className={`w-full mb-6 space-y-4 ${showQR ? 'flex sm:hidden' : 'flex'} flex-col`}>
+                    {!isCodeSent ? (
+                        <form onSubmit={handleSendCode} className="space-y-3 w-full">
+                            <div className="w-full">
+                                <PhoneInput
+                                    defaultCountry="PE"
+                                    placeholder="Número de celular"
+                                    value={phoneNumber}
+                                    onChange={setPhoneNumber}
+                                    disabled={loading}
+                                    countrySelectComponent={CustomCountrySelect}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading || !phoneNumber}
+                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
+                            >
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Recibir código SMS'}
+                            </button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleVerifyCode} className="space-y-3 w-full">
+                            <div className="relative">
+                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="Código de 6 dígitos"
+                                    maxLength={6}
+                                    disabled={loading}
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a0724] text-gray-800 dark:text-white text-center tracking-[0.5em] font-bold text-lg focus:ring-2 focus:ring-green-300 focus:border-green-400 outline-none transition"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading || verificationCode.length !== 6}
+                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3.5 rounded-xl font-semibold transition active:scale-95 shadow"
+                            >
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin"/> : 'Verificar e ingresar'}
+                            </button>
+                        </form>
+                    )}
+                </div>
+
+                {!isCodeSent && (
                     <button
                         type="button"
                         onClick={() => {
                             setShowQR(!showQR);
                             setError('');
                         }}
-                        className="w-full mb-4 flex items-center justify-center gap-2 text-xs font-semibold text-green-600 hover:text-green-500 transition"
+                        className="hidden sm:flex w-full mb-4 items-center justify-center gap-2 text-xs font-semibold text-green-600 hover:text-green-500 transition"
                     >
                         {showQR ? (
                             <>
