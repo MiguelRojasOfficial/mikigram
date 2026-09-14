@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { auth, db } from '@/lib/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection } from 'firebase/firestore';
 import { MessageSquare, ShieldCheck, Phone, Lock, Loader2, ArrowLeft, QrCode } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
@@ -12,7 +12,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import PhoneInput, { getCountryCallingCode } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
-// Componente personalizado para mostrar Bandera + Nombre + Código + Flecha
 const CustomCountrySelect = ({ value, onChange, options, iconComponent: Icon }: any) => {
     const selectedOption = options.find((option: any) => option.value === value);
 
@@ -58,46 +57,48 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showQR, setShowQR] = useState(true);
-
-    // Estado para la sesión del QR en tiempo real
+    const [isMobileScreen, setIsMobileScreen] = useState(false);
     const [qrSessionId, setQrSessionId] = useState<string | null>(null);
-
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
     const { loginWithGoogle } = useAuth();
     const router = useRouter();
 
-    // -------------------------------------------------------------
-    // LÓGICA DE QR EN TIEMPO REAL CON FIRESTORE
-    // -------------------------------------------------------------
     useEffect(() => {
-        if (!showQR) return;
+        const handleResize = () => {
+            const isMobile = window.innerWidth < 640; // 'sm' breakpoint
+            setIsMobileScreen(isMobile);
+            if (isMobile) {
+                setShowQR(false); // En teléfonos pasa directo a número de celular
+            }
+        };
 
-        // 1. Generar un ID de sesión único
-        const newSessionId = doc(collection(db, 'qr_sessions')).id;
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (!showQR || isMobileScreen) return;
+
+        const sessionDocRef = doc(collection(db, 'qr_sessions'));
+        const newSessionId = sessionDocRef.id;
         setQrSessionId(newSessionId);
-
-        const sessionRef = doc(db, 'qr_sessions', newSessionId);
-
-        // 2. Crear el documento de la sesión en Firestore
-        setDoc(sessionRef, {
+        setDoc(sessionDocRef, {
             status: 'pending',
             createdAt: serverTimestamp(),
         }).catch(err => console.error("Error creando sesión QR:", err));
 
-        // 3. Escuchar cambios en tiempo real
-        const unsubscribe = onSnapshot(sessionRef, async (snapshot) => {
+        const unsubscribe = onSnapshot(sessionDocRef, async (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
 
-                // Cuando el celular escanea y autoriza la sesión
                 if (data.status === 'completed' && data.uid) {
                     try {
                         const userDocRef = doc(db, 'users', data.uid);
                         const userDoc = await getDoc(userDocRef);
 
                         if (userDoc.exists()) {
-                            // Redirigir al perfil
                             router.push('/profile');
                         }
                     } catch (err) {
@@ -111,11 +112,8 @@ export default function Login() {
         return () => {
             unsubscribe();
         };
-    }, [showQR, router]);
+    }, [showQR, isMobileScreen, router]);
 
-    // -------------------------------------------------------------
-    // RECAPTCHA Y AUTENTICACIÓN POR TELÉFONO
-    // -------------------------------------------------------------
     useEffect(() => {
         if (!recaptchaVerifierRef.current && auth) {
             try {
@@ -280,7 +278,7 @@ export default function Login() {
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 text-center mb-6 text-sm px-4">
                     {showQR 
-                        ? 'Escanea este código desde la app móvil de Mikigram para iniciar sesión.' 
+                        ? 'Escanea este código desde la app o versión web móvil para iniciar sesión.' 
                         : (isCodeSent ? `Ingrese el código enviado a ${phoneNumber}` : 'Contactate con tu celular o cuenta de Google.')}
                 </p>
 
@@ -353,7 +351,7 @@ export default function Login() {
                     </div>
                 )}
 
-                {!isCodeSent && (
+                {!isCodeSent && !isMobileScreen && (
                     <button
                         type="button"
                         onClick={() => {
