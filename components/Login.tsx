@@ -4,13 +4,52 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { auth, db } from '@/lib/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { MessageSquare, ShieldCheck, Phone, Lock, Loader2, ArrowLeft, QrCode } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 
-import PhoneInput from 'react-phone-number-input';
+import PhoneInput, { getCountryCallingCode } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+
+// Componente personalizado para mostrar Bandera + Nombre + Código + Flecha
+const CustomCountrySelect = ({ value, onChange, options, iconComponent: Icon }: any) => {
+    const selectedOption = options.find((option: any) => option.value === value);
+
+    return (
+        <div className="relative flex items-center gap-2 bg-gray-50 dark:bg-[#1a0724] px-3 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 max-w-[160px] sm:max-w-[180px]">
+            {value && Icon && (
+                <div className="w-6 h-4 flex-shrink-0">
+                    <Icon country={value} label={selectedOption?.label} />
+                </div>
+            )}
+            
+            <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                {selectedOption?.label}
+            </span>
+
+            {value && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0">
+                    +{getCountryCallingCode(value)}
+                </span>
+            )}
+
+            <div className="w-2 h-2 border-r-2 border-b-2 border-gray-600 dark:border-gray-300 rotate-45 ml-auto flex-shrink-0"></div>
+
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value || undefined)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            >
+                {options.map((option: any) => (
+                    <option key={option.value || 'ZZ'} value={option.value} className="bg-white dark:bg-[#1a0724] text-gray-900 dark:text-white">
+                        {option.label} {option.value ? `(+${getCountryCallingCode(option.value)})` : ''}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+};
 
 export default function Login() {
     const [phoneNumber, setPhoneNumber] = useState<string | undefined>('');
@@ -20,13 +59,63 @@ export default function Login() {
     const [error, setError] = useState('');
     const [showQR, setShowQR] = useState(true);
 
+    // Estado para la sesión del QR en tiempo real
+    const [qrSessionId, setQrSessionId] = useState<string | null>(null);
+
     const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
     const confirmationResultRef = useRef<ConfirmationResult | null>(null);
     const { loginWithGoogle } = useAuth();
     const router = useRouter();
 
-    const qrSessionToken = "mikigram-auth-session-xyz123";
+    // -------------------------------------------------------------
+    // LÓGICA DE QR EN TIEMPO REAL CON FIRESTORE
+    // -------------------------------------------------------------
+    useEffect(() => {
+        if (!showQR) return;
 
+        // 1. Generar un ID de sesión único
+        const newSessionId = doc(collection(db, 'qr_sessions')).id;
+        setQrSessionId(newSessionId);
+
+        const sessionRef = doc(db, 'qr_sessions', newSessionId);
+
+        // 2. Crear el documento de la sesión en Firestore
+        setDoc(sessionRef, {
+            status: 'pending',
+            createdAt: serverTimestamp(),
+        }).catch(err => console.error("Error creando sesión QR:", err));
+
+        // 3. Escuchar cambios en tiempo real
+        const unsubscribe = onSnapshot(sessionRef, async (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+
+                // Cuando el celular escanea y autoriza la sesión
+                if (data.status === 'completed' && data.uid) {
+                    try {
+                        const userDocRef = doc(db, 'users', data.uid);
+                        const userDoc = await getDoc(userDocRef);
+
+                        if (userDoc.exists()) {
+                            // Redirigir al perfil
+                            router.push('/profile');
+                        }
+                    } catch (err) {
+                        console.error("Error confirmando sesión por QR:", err);
+                        setError("Error completando inicio de sesión por QR.");
+                    }
+                }
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, [showQR, router]);
+
+    // -------------------------------------------------------------
+    // RECAPTCHA Y AUTENTICACIÓN POR TELÉFONO
+    // -------------------------------------------------------------
     useEffect(() => {
         if (!recaptchaVerifierRef.current && auth) {
             try {
@@ -117,7 +206,7 @@ export default function Login() {
             }
         } catch (err: any) {
             console.error(err);
-            setError('Codigo de verificación incorrecto o expirado.');
+            setError('Código de verificación incorrecto o expirado.');
         } finally {
             setLoading(false);
         }
@@ -138,66 +227,6 @@ export default function Login() {
                     align-items: center;
                     gap: 10px;
                     width: 100%;
-                }
-
-                .PhoneInputCountry {
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    background-color: #f9fafb;
-                    padding: 12px 14px;
-                    border-radius: 12px;
-                    border: 1px solid #d1d5db;
-                }
-
-                .dark .PhoneInputCountry {
-                    background-color: #1a0724;
-                    border-color: #4b5563;
-                }
-
-                .PhoneInputCountrySelect {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    height: 100%;
-                    width: 100%;
-                    z-index: 1;
-                    border: none;
-                    opacity: 0;
-                    cursor: pointer;
-                }
-
-                .PhoneInputCountrySelect option {
-                    background-color: #ffffff;
-                    color: #111827;
-                }
-
-                .dark .PhoneInputCountrySelect option {
-                    background-color: #1a0724;
-                    color: #ffffff;
-                }
-
-                .PhoneInputCountryIcon {
-                    width: 24px;
-                    height: 18px;
-                    box-shadow: 0 0 2px rgba(0,0,0,0.3);
-                }
-
-                .PhoneInputCountrySelectArrow {
-                    display: block;
-                    width: 8px;
-                    height: 8px;
-                    margin-left: 2px;
-                    border-style: solid;
-                    border-color: #374151;
-                    border-width: 0 2px 2px 0;
-                    transform: rotate(45deg);
-                    opacity: 1 !important;
-                }
-
-                .dark .PhoneInputCountrySelectArrow {
-                    border-color: #f3f4f6;
                 }
 
                 .PhoneInputInput {
@@ -264,7 +293,13 @@ export default function Login() {
                 {showQR ? (
                     <div className="w-full flex flex-col items-center gap-4 mb-6">
                         <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-inner">
-                            <QRCodeSVG value={qrSessionToken} size={180} />
+                            {qrSessionId ? (
+                                <QRCodeSVG value={qrSessionId} size={180} />
+                            ) : (
+                                <div className="w-[180px] h-[180px] flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+                                </div>
+                            )}
                         </div>
                         <p className="text-xs text-gray-400 text-center">
                             Abre Mikigram en tu celular &gt; Dispositivos vinculados
@@ -281,6 +316,7 @@ export default function Login() {
                                         value={phoneNumber}
                                         onChange={setPhoneNumber}
                                         disabled={loading}
+                                        countrySelectComponent={CustomCountrySelect}
                                     />
                                 </div>
                                 <button
