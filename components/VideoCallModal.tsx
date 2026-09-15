@@ -2,16 +2,18 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, onSnapshot, updateDoc, collection, addDoc, deleteDoc } from 'firebase/firestore';
-import { PhoneOff, Video, VideoOff, Mic, MicOff, Loader2 } from 'lucide-react';
+import { doc, setDoc, onSnapshot, updateDoc, collection, addDoc } from 'firebase/firestore';
+import { PhoneOff, Video, VideoOff, Mic, MicOff, Loader2, Phone } from 'lucide-react';
 
 interface VideoCallModalProps {
     chatId: string;
     currentUserId: string;
     recipientId: string;
     recipientName: string;
+    recipientPhoto?: string;
     onClose: () => void;
     isIncoming?: boolean;
+    isAudioOnly?: boolean; // Nuevo prop para llamadas de solo voz
 }
 
 const iceServers = {
@@ -26,14 +28,16 @@ export default function VideoCallModal({
     currentUserId,
     recipientId,
     recipientName,
+    recipientPhoto,
     onClose,
     isIncoming = false,
+    isAudioOnly = false,
 }: VideoCallModalProps) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [callStatus, setcallStatus] = useState<string>(isIncoming ? 'Llamada entrante.....' : 'Llamando.....');
     const [isMuted, setIsMuted] = useState(false);
-    const [isVideoOn, setIsVideoOn] = useState(true);
+    const [isVideoOn, setIsVideoOn] = useState(!isAudioOnly);
     
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -48,9 +52,15 @@ export default function VideoCallModal({
 
         const initCall = async () => {
             try {
-                localMediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                // Solicitar video solo si NO es llamada de solo audio
+                localMediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: !isAudioOnly, 
+                    audio: true 
+                });
                 setLocalStream(localMediaStream);
-                if (localVideoRef.current) localVideoRef.current.srcObject = localMediaStream;
+                if (localVideoRef.current && !isAudioOnly) {
+                    localVideoRef.current.srcObject = localMediaStream;
+                }
 
                 const pc = new RTCPeerConnection(iceServers);
                 peerConnection.current = pc;
@@ -78,9 +88,10 @@ export default function VideoCallModal({
                         sdp: offerDescription.sdp,
                         type: offerDescription.type,
                         callerId: currentUserId,
+                        isAudioOnly: isAudioOnly,
                         status: 'ringing', 
                     };
-                    await setDoc(callDocRef, { offer, status: 'ringing' });
+                    await setDoc(callDocRef, { offer, status: 'ringing', isAudioOnly });
 
                     unsubCallDoc = onSnapshot(callDocRef, async (snapshot) => {
                         const data = snapshot.data();
@@ -155,7 +166,7 @@ export default function VideoCallModal({
             if (unsubCallDoc) unsubCallDoc();
             if (unsubCandidates) unsubCandidates();
         };
-    }, [isIncoming, chatId]);
+    }, [isIncoming, chatId, isAudioOnly]);
 
     const closeStreamsAndUI = () => {
         isEndingRef.current = true;
@@ -185,34 +196,74 @@ export default function VideoCallModal({
     };
 
     const toggleVideo = () => {
-        if (localStream) {
-            localStream.getVideoTracks()[0].enabled = !isVideoOn;
-            setIsVideoOn(!isVideoOn);
+        if (localStream && !isAudioOnly) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !isVideoOn;
+                setIsVideoOn(!isVideoOn);
+            }
         }
     };
 
     return (
         <div className="fixed inset-0 bg-[#0b141a] z-50 flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="w-full max-w-4xl bg-[#111b20] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col h-[85vh] relative">
-                <div className="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
-                    {remoteStream ? (
-                        <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="text-center text-gray-400 flex flex-col items-center gap-3">
-                            <Loader2 className="animate-spin text-green-500" size={32} />
-                            <p className="text-sm font-medium">{callStatus}</p>
-                            <p className="text-xs text-gray-600">{recipientName}</p>
-                        </div>
-                    )}
+            {/* Audio tag oculto pero necesario para reproducir el audio entrante si no hay elemento video */}
+            <audio ref={remoteVideoRef as any} autoPlay playsInline />
 
-                    <div className="absolute top-4 right-4 w-32 md:w-44 aspect-video bg-[#202c35] rounded-2xl overflow-hidden shadow-md border border-gray-700 z-10">
-                        <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
+            <div className="w-full max-w-4xl bg-[#111b20] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col h-[85vh] relative">
+                
+                {/* ÁREA PRINCIPAL: SI ES SOLO AUDIO O NO HAY VIDEO AÚN */}
+                {isAudioOnly ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-[#111b20] to-[#0b141a] p-6">
+                        <div className="relative">
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-green-500/30 flex items-center justify-center bg-gray-800 shadow-2xl">
+                                {recipientPhoto ? (
+                                    <img src={recipientPhoto} alt={recipientName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-5xl font-bold text-white">
+                                        {recipientName.charAt(0).toUpperCase()}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 p-3 bg-green-500 rounded-full text-white shadow-lg animate-pulse">
+                                <Phone size={20} />
+                            </div>
+                        </div>
+
+                        <div className="text-center">
+                            <h3 className="text-2xl font-semibold text-white mb-1">{recipientName}</h3>
+                            <p className="text-sm text-green-400 font-medium flex items-center justify-center gap-2">
+                                {callStatus === 'Llamando.....' || callStatus === 'Conectando...' ? (
+                                    <Loader2 className="animate-spin" size={16} />
+                                ) : null}
+                                {callStatus}
+                            </p>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
+                        {remoteStream ? (
+                            <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="text-center text-gray-400 flex flex-col items-center gap-3">
+                                <Loader2 className="animate-spin text-green-500" size={32} />
+                                <p className="text-sm font-medium">{callStatus}</p>
+                                <p className="text-xs text-gray-600">{recipientName}</p>
+                            </div>
+                        )}
+
+                        <div className="absolute top-4 right-4 w-32 md:w-44 aspect-video bg-[#202c35] rounded-2xl overflow-hidden shadow-md border border-gray-700 z-10">
+                            <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
+                        </div>
+                    </div>
+                )}
+
+                {/* CONTROLES INFERIORES */}
                 <footer className="p-6 bg-[#111b20] border-t border-gray-800 flex items-center justify-center gap-6">
                     <button
                         onClick={toggleMute}
                         className={`p-4 rounded-full transition-all active:scale-95 ${isMuted ? 'bg-red-500 text-white' : 'bg-[#202c35] text-gray-300 hover:text-white'}`}
+                        title={isMuted ? "Desactivar silencio" : "Silenciar"}
                     >
                         {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
                     </button>
@@ -220,16 +271,20 @@ export default function VideoCallModal({
                     <button
                         onClick={handleHangUp}
                         className="p-4 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-900/30"
+                        title="Colgar"
                     >
                         <PhoneOff size={25} />
                     </button>
 
-                    <button
-                        onClick={toggleVideo}
-                        className={`p-4 rounded-full transition-all active:scale-95 ${!isVideoOn ? 'bg-red-500 text-white' : 'bg-[#202c35] text-gray-300 hover:text-white'}`}
-                    >
-                        {!isVideoOn ? <VideoOff size={20} /> : <Video size={20} />}
-                    </button>
+                    {!isAudioOnly && (
+                        <button
+                            onClick={toggleVideo}
+                            className={`p-4 rounded-full transition-all active:scale-95 ${!isVideoOn ? 'bg-red-500 text-white' : 'bg-[#202c35] text-gray-300 hover:text-white'}`}
+                            title={isVideoOn ? "Apagar cámara" : "Encender cámara"}
+                        >
+                            {!isVideoOn ? <VideoOff size={20} /> : <Video size={20} />}
+                        </button>
+                    )}
                 </footer>
             </div>
         </div>
