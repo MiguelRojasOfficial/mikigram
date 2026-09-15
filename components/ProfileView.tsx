@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserProfile } from '@/lib/userService';
 import { Eye, Settings, Grid, Heart, Lock, Edit3 } from 'lucide-react';
 
@@ -10,6 +11,7 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ user, isOwnProfile = true }: ProfileViewProps) {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'posts' | 'likes' | 'private'>('posts');
     const [showVisitors, setShowVisitors] = useState(false);
 
@@ -17,11 +19,15 @@ export default function ProfileView({ user, isOwnProfile = true }: ProfileViewPr
         <div className="min-h-screen bg-gray-50 dark:bg-[#111b20] pb-24 text-gray-900 dark:text-white">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1f2c34]">
                 <h1 className="text-lg font-bold">@{user.displayName.toLowerCase().replace(/\s+/g, '')}</h1>
-                <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <button 
+                    onClick={() => router.push('/settings')}
+                    aria-label="Ajustes de configuración"
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition active:scale-95"
+                >
                     <Settings size={20} />
                 </button>
             </div>
-
+            
             <div className="flex flex-col items-center pt-6 px-4">
                 <div className="relative mb-3">
                     <img 
