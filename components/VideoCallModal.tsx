@@ -207,12 +207,9 @@ export default function VideoCallModal({
 
     return (
         <div className="fixed inset-0 bg-[#0b141a] z-50 flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
-            {/* Audio tag oculto pero necesario para reproducir el audio entrante si no hay elemento video */}
             <audio ref={remoteVideoRef as any} autoPlay playsInline />
 
             <div className="w-full max-w-4xl bg-[#111b20] rounded-3xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col h-[85vh] relative">
-                
-                {/* ÁREA PRINCIPAL: SI ES SOLO AUDIO O NO HAY VIDEO AÚN */}
                 {isAudioOnly ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-[#111b20] to-[#0b141a] p-6">
                         <div className="relative">
@@ -258,7 +255,6 @@ export default function VideoCallModal({
                     </div>
                 )}
 
-                {/* CONTROLES INFERIORES */}
                 <footer className="p-6 bg-[#111b20] border-t border-gray-800 flex items-center justify-center gap-6">
                     <button
                         onClick={toggleMute}
