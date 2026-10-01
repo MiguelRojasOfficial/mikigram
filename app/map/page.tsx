@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
-// Interfases de datos
 interface ContactoMarker {
   id: string;
   type: 'contacto';
@@ -41,7 +40,6 @@ interface EventoMarker {
 
 type PuntoSeleccionado = ContactoMarker | EventoMarker | null;
 
-// Carga dinámica del mapa interactivo
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
   { ssr: false }
@@ -55,7 +53,6 @@ const Marker = dynamic(
   { ssr: false }
 );
 
-// Datos de prueba para contactos y eventos
 const MOCK_CONTACTOS: ContactoMarker[] = [
   { 
     id: 'c1', 
@@ -112,8 +109,6 @@ export default function MapPage() {
   const [filtro, setFiltro] = useState<'todos' | 'contactos' | 'eventos'>('todos');
   const [puntoSeleccionado, setPuntoSeleccionado] = useState<PuntoSeleccionado>(null);
   const [eventos, setEventos] = useState<EventoMarker[]>(MOCK_EVENTOS);
-
-  // Crear iconos personalizados con la foto de perfil para el mapa
   const crearIconoContacto = (fotoPerfil: string) => {
     if (typeof window === 'undefined') return undefined;
     const L = require('leaflet');
@@ -194,8 +189,6 @@ export default function MapPage() {
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-gray-900">
-      
-      {/* Filtros Superiores */}
       <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between gap-2">
         <div className="flex bg-white/90 dark:bg-[#111b20]/90 backdrop-blur-md p-1 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800">
           <button
@@ -232,7 +225,6 @@ export default function MapPage() {
         </button>
       </div>
 
-      {/* Renderizado del Mapa Interactivo */}
       <div className="relative flex-1 w-full h-full z-10">
         <MapContainer
           center={[-12.0463, -77.0427]}
@@ -257,7 +249,6 @@ export default function MapPage() {
             />
           ))}
 
-          {/* Marcadores de Eventos */}
           {mostrarEventos && eventos.map((evento) => (
             <Marker
               key={evento.id}
@@ -271,7 +262,6 @@ export default function MapPage() {
         </MapContainer>
       </div>
 
-      {/* Panel Inferior con detalles al presionar un contacto o evento */}
       {puntoSeleccionado && (
         <div className="absolute bottom-4 left-4 right-4 z-30 bg-white dark:bg-[#111b20] border border-gray-200 dark:border-gray-800 p-5 rounded-3xl shadow-2xl transition-all animate-in slide-in-from-bottom duration-300 max-w-lg mx-auto">
           <button 
