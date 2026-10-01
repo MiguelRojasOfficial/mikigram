@@ -1,16 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { 
-  MapPin, 
   Users, 
   Calendar, 
   Navigation, 
   CheckCircle2, 
   Clock, 
-  X
+  X,
+  MapPin
 } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
 
+// Interfases de datos
 interface ContactoMarker {
   id: string;
   type: 'contacto';
@@ -38,6 +41,21 @@ interface EventoMarker {
 
 type PuntoSeleccionado = ContactoMarker | EventoMarker | null;
 
+// Carga dinámica del mapa interactivo
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
+  { ssr: false }
+);
+
+// Datos de prueba para contactos y eventos
 const MOCK_CONTACTOS: ContactoMarker[] = [
   { 
     id: 'c1', 
@@ -65,7 +83,7 @@ const MOCK_EVENTOS: EventoMarker[] = [
   { 
     id: 'e1', 
     type: 'evento', 
-    titulo: 'Hackathon Presencial 2026', 
+    titulo: 'Hackathon Presencial', 
     categoria: 'Tecnología', 
     hora: 'Hoy, 18:00 hrs', 
     ubicacion: 'Coworking Central', 
@@ -95,6 +113,56 @@ export default function MapPage() {
   const [puntoSeleccionado, setPuntoSeleccionado] = useState<PuntoSeleccionado>(null);
   const [eventos, setEventos] = useState<EventoMarker[]>(MOCK_EVENTOS);
 
+  // Crear iconos personalizados con la foto de perfil para el mapa
+  const crearIconoContacto = (fotoPerfil: string) => {
+    if (typeof window === 'undefined') return undefined;
+    const L = require('leaflet');
+    return L.divIcon({
+      className: 'custom-map-icon',
+      html: `
+        <div style="
+          width: 44px; 
+          height: 44px; 
+          border-radius: 50%; 
+          border: 3px solid #10b981; 
+          overflow: hidden; 
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+          background-color: white;
+        ">
+          <img src="${fotoPerfil}" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+      `,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22]
+    });
+  };
+
+  const crearIconoEvento = () => {
+    if (typeof window === 'undefined') return undefined;
+    const L = require('leaflet');
+    return L.divIcon({
+      className: 'custom-map-icon',
+      html: `
+        <div style="
+          width: 38px; 
+          height: 38px; 
+          border-radius: 50%; 
+          background-color: #10b981; 
+          color: white; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+          border: 2px solid white;
+        ">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
+    });
+  };
+
   const alternarAsistencia = (eventoId: string) => {
     setEventos(prev => prev.map(ev => {
       if (ev.id === eventoId) {
@@ -120,6 +188,9 @@ export default function MapPage() {
       });
     }
   };
+
+  const mostrarContactos = filtro === 'todos' || filtro === 'contactos';
+  const mostrarEventos = filtro === 'todos' || filtro === 'eventos';
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-gray-900">
@@ -161,14 +232,46 @@ export default function MapPage() {
         </button>
       </div>
 
-      {/* Área del Mapa */}
-      <div className="relative flex-1 w-full h-full bg-[#1e293b]">
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-          <span>Área de Renderizado de Mapa</span>
-        </div>
+      {/* Renderizado del Mapa Interactivo */}
+      <div className="relative flex-1 w-full h-full z-10">
+        <MapContainer
+          center={[-12.0463, -77.0427]}
+          zoom={14}
+          scrollWheelZoom={true}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          {/* Marcadores de Contactos */}
+          {mostrarContactos && MOCK_CONTACTOS.map((contacto) => (
+            <Marker
+              key={contacto.id}
+              position={[contacto.lat, contacto.lng]}
+              icon={crearIconoContacto(contacto.fotoPerfil)}
+              eventHandlers={{
+                click: () => setPuntoSeleccionado(contacto),
+              }}
+            />
+          ))}
+
+          {/* Marcadores de Eventos */}
+          {mostrarEventos && eventos.map((evento) => (
+            <Marker
+              key={evento.id}
+              position={[evento.lat, evento.lng]}
+              icon={crearIconoEvento()}
+              eventHandlers={{
+                click: () => setPuntoSeleccionado(evento),
+              }}
+            />
+          ))}
+        </MapContainer>
       </div>
 
-      {/* Panel Inferior de Información */}
+      {/* Panel Inferior con detalles al presionar un contacto o evento */}
       {puntoSeleccionado && (
         <div className="absolute bottom-4 left-4 right-4 z-30 bg-white dark:bg-[#111b20] border border-gray-200 dark:border-gray-800 p-5 rounded-3xl shadow-2xl transition-all animate-in slide-in-from-bottom duration-300 max-w-lg mx-auto">
           <button 
