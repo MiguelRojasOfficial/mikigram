@@ -237,7 +237,6 @@ export default function MapPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Marcadores de Contactos */}
           {mostrarContactos && MOCK_CONTACTOS.map((contacto) => (
             <Marker
               key={contacto.id}
@@ -328,7 +327,6 @@ export default function MapPage() {
           )}
         </div>
       )}
-
     </div>
   );
 }
