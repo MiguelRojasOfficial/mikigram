@@ -25,8 +25,8 @@ export default function MapContent({ contactos }: MapContentProps) {
           <img src="${fotoUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
       `,
-      iconSize: [42, 42],
-      iconAnchor: [21, 21],
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
     });
 
   return (

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { useChatStore } from '@/store/useChatStore';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 
 export const useAuth = () => {
   const { user, setUser } = useChatStore();
@@ -18,38 +18,37 @@ export const useAuth = () => {
 
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    // Forzar selección de cuenta para evitar bloqueos de sesión en móviles
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
       const result = await signInWithPopup(auth, provider);
       const loggedUser = result.user;
 
       if (loggedUser) {
-        // Intentar obtener coordenadas GPS reales del navegador
-        let lat = -12.0463;
-        let lng = -77.0427;
+        // 1. Guardar primero al usuario para asegurar el Login de inmediato
+        const userRef = doc(db, "users", loggedUser.uid);
+        await setDoc(userRef, {
+          uid: loggedUser.uid,
+          displayName: loggedUser.displayName,
+          email: loggedUser.email,
+          photoURL: loggedUser.photoURL,
+          lastSeen: serverTimestamp()
+        }, { merge: true });
 
+        // 2. Intentar actualizar las coordenadas GPS en segundo plano sin bloquear el auth
         if (typeof window !== 'undefined' && 'geolocation' in navigator) {
           navigator.geolocation.getCurrentPosition(
             async (pos) => {
-              await setDoc(doc(db, "users", loggedUser.uid), {
-                uid: loggedUser.uid,
-                displayName: loggedUser.displayName,
-                email: loggedUser.email,
-                photoURL: loggedUser.photoURL,
+              await updateDoc(userRef, {
                 lat: pos.coords.latitude,
                 lng: pos.coords.longitude,
-                lastSeen: serverTimestamp()
-              }, { merge: true });
+              });
             },
-            async () => {
-              // Si el usuario deniega el permiso GPS, guarda los datos básicos
-              await setDoc(doc(db, "users", loggedUser.uid), {
-                uid: loggedUser.uid,
-                displayName: loggedUser.displayName,
-                email: loggedUser.email,
-                photoURL: loggedUser.photoURL,
-                lastSeen: serverTimestamp()
-              }, { merge: true });
-            }
+            (error) => {
+              console.warn("Permiso de ubicación denegado o no disponible en celular:", error.message);
+            },
+            { enableHighAccuracy: false, timeout: 5000 } // Evita congelar la app en móviles
           );
         }
       }
