@@ -41,8 +41,7 @@ export default function MapPage() {
           usuarios.push({
             id: data.uid,
             nombre: data.displayName || 'Usuario de Mikigram',
-            fotoPerfil: data.photoURL || '/default-avatar.png',
-            // Si el contacto ya guardó su ubicación la usa, si no, usa coordenadas base
+            fotoPerfil: data.photoURL,
             lat: data.lat ?? -12.0463,
             lng: data.lng ?? -77.0427,
           });

@@ -19,7 +19,7 @@ interface MapContentProps {
 export default function MapContent({ contactos }: MapContentProps) {
   const crearIconoContacto = (fotoUrl: string) =>
     L.divIcon({
-      className: 'custom-map-avatar',
+      className: 'custom-map',
       html: `
         <div style="width: 42px; height: 42px; border-radius: 50%; border: 3px solid #10b981; overflow: hidden; background: #1f2937; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);">
           <img src="${fotoUrl}" alt="" style="width: 100%; height: 100%; object-fit: cover;" />
