@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, Loader2, X, RefreshCw } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -10,13 +10,58 @@ import { useRouter } from 'next/navigation';
 export default function CreatePage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [subiendo, setSubiendo] = useState(false);
+  const [modoCamara, setModoCamara] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const abrirCamaraEnVivo = async () => {
+    try {
+      setModoCamara(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
 
-  // Convertir imagen a Base64 para guardarla directamente en Firestore
-  const manejarSeleccionImagen = (e: React.ChangeEvent<HTMLInputElement>) => {
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('No se pudo acceder a la cámara:', error);
+      alert('No se pudo acceder a la cámara. Asegúrate de otorgar los permisos en tu navegador.');
+      cerrarCamara();
+    }
+  };
+
+  const capturarFoto = () => {
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const fotoDataUrl = canvas.toDataURL('image/jpeg');
+      setPreview(fotoDataUrl);
+    }
+
+    cerrarCamara();
+  };
+
+  const cerrarCamara = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setModoCamara(false);
+  };
+
+  const manejarGaleria = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -51,23 +96,42 @@ export default function CreatePage() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center p-6 text-center bg-gray-50 dark:bg-[#111b20]">
       <h2 className="text-xl font-bold dark:text-white mb-6">Crear Nuevo Estado</h2>
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        ref={cameraInputRef}
-        onChange={manejarSeleccionImagen}
-        className="hidden"
-      />
+
+      {/* Input de Galería Oculto */}
       <input
         type="file"
         accept="image/*"
         ref={galleryInputRef}
-        onChange={manejarSeleccionImagen}
+        onChange={manejarGaleria}
         className="hidden"
       />
 
-      {preview ? (
+      {modoCamara ? (
+        <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+          <div className="relative w-full h-80 bg-black rounded-2xl overflow-hidden shadow-xl border-2 border-emerald-500">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <button
+              onClick={cerrarCamara}
+              className="absolute top-3 right-3 p-2 bg-black/60 text-white rounded-full hover:bg-black/80"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <button
+            onClick={capturarFoto}
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+          >
+            <Camera size={20} />
+            <span>Capturar Foto</span>
+          </button>
+        </div>
+      ) : preview ? (
         <div className="flex flex-col items-center gap-4 w-full max-w-xs">
           <div className="w-full h-64 rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-md relative">
             <img src={preview} alt="Vista previa" className="w-full h-full object-cover" />
@@ -93,7 +157,7 @@ export default function CreatePage() {
       ) : (
         <div className="flex gap-4">
           <button
-            onClick={() => cameraInputRef.current?.click()}
+            onClick={abrirCamaraEnVivo}
             className="flex flex-col items-center gap-2 p-6 rounded-2xl bg-emerald-600 text-white font-semibold shadow-lg hover:bg-emerald-700 transition active:scale-95"
           >
             <Camera size={28} />
