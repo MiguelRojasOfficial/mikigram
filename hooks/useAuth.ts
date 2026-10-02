@@ -45,7 +45,7 @@ export const useAuth = () => {
             (error) => {
               console.warn("Permiso de ubicación denegado o no disponible en celular:", error.message);
             },
-            { enableHighAccuracy: false, timeout: 5000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
           );
         }
       }
