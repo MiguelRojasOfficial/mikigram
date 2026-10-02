@@ -23,15 +23,36 @@ export const useAuth = () => {
       const loggedUser = result.user;
 
       if (loggedUser) {
-        await setDoc(doc(db, "users", loggedUser.uid), {
-          uid: loggedUser.uid,
-          displayName: loggedUser.displayName,
-          email: loggedUser.email,
-          photoURL: loggedUser.photoURL,
-          lastSeen: serverTimestamp()
-        }, { merge: true });
-      }
+        // Intentar obtener coordenadas GPS reales del navegador
+        let lat = -12.0463;
+        let lng = -77.0427;
 
+        if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              await setDoc(doc(db, "users", loggedUser.uid), {
+                uid: loggedUser.uid,
+                displayName: loggedUser.displayName,
+                email: loggedUser.email,
+                photoURL: loggedUser.photoURL,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                lastSeen: serverTimestamp()
+              }, { merge: true });
+            },
+            async () => {
+              // Si el usuario deniega el permiso GPS, guarda los datos básicos
+              await setDoc(doc(db, "users", loggedUser.uid), {
+                uid: loggedUser.uid,
+                displayName: loggedUser.displayName,
+                email: loggedUser.email,
+                photoURL: loggedUser.photoURL,
+                lastSeen: serverTimestamp()
+              }, { merge: true });
+            }
+          );
+        }
+      }
     } catch (error) {
       console.error("Error al iniciar sesión", error);
     }
