@@ -54,4 +54,4 @@ export default function MapPage() {
   }, [user?.uid]);
 
   return <MapContent contactos={contactosChat} />;
-}
+} 
