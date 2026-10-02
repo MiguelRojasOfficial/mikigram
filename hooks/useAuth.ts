@@ -18,7 +18,6 @@ export const useAuth = () => {
 
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    // Forzar selección de cuenta para evitar bloqueos de sesión en móviles
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
@@ -26,7 +25,6 @@ export const useAuth = () => {
       const loggedUser = result.user;
 
       if (loggedUser) {
-        // 1. Guardar primero al usuario para asegurar el Login de inmediato
         const userRef = doc(db, "users", loggedUser.uid);
         await setDoc(userRef, {
           uid: loggedUser.uid,
@@ -36,7 +34,6 @@ export const useAuth = () => {
           lastSeen: serverTimestamp()
         }, { merge: true });
 
-        // 2. Intentar actualizar las coordenadas GPS en segundo plano sin bloquear el auth
         if (typeof window !== 'undefined' && 'geolocation' in navigator) {
           navigator.geolocation.getCurrentPosition(
             async (pos) => {
@@ -48,7 +45,7 @@ export const useAuth = () => {
             (error) => {
               console.warn("Permiso de ubicación denegado o no disponible en celular:", error.message);
             },
-            { enableHighAccuracy: false, timeout: 5000 } // Evita congelar la app en móviles
+            { enableHighAccuracy: false, timeout: 5000 }
           );
         }
       }
